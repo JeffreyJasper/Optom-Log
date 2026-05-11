@@ -3,31 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Log - Vertical Optimized (Numpad)</title>
+    <title>Clinical Log - Complete Interface</title>
     <style>
         :root {
             --bg-color: #000000;
             --app-bg: #121212;
-            --card-bg: #1c1c1e;
+            --card-bg: #1e1e1e;
             --text-main: #ffffff;
-            --text-muted: #8e8e93;
+            --text-muted: #9e9e9e;
             --accent-blue: #0a84ff;
             --btn-bg: #2c2c2e;
             --btn-active: #48484a;
             --minus-red: #ff453a;
             --plus-green: #32d74b;
+            --border-line: #333333;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             user-select: none;
             touch-action: manipulation;
         }
 
-        /* 限制最大寬度，讓 iPad 垂直時也能維持手機比例，防止按鈕過大 */
         .app-container {
             max-width: 500px;
             margin: 0 auto;
@@ -37,19 +38,24 @@
             flex-direction: column;
         }
 
-        /* 頂部學生切換 */
-        .tabs {
-            display: flex;
+        /* 頂部導航與切換標籤 */
+        .nav-section {
             background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-line);
+        }
+        
+        .tabs-row {
+            display: flex;
+            border-bottom: 1px solid var(--border-line);
         }
         .tab-btn {
             flex: 1;
-            padding: 15px 0;
+            padding: 12px 0;
             text-align: center;
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
         }
         .tab-btn.active {
@@ -57,45 +63,69 @@
             border-bottom: 3px solid var(--accent-blue);
         }
 
-        /* 2x2 度數顯示區塊 (極大化防睇漏) */
+        /* 次級切換 (項目與左右眼) */
+        .sub-nav {
+            display: flex;
+            padding: 10px 15px;
+            gap: 10px;
+        }
+        .toggle-group {
+            display: flex;
+            flex: 1;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-line);
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 0;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .toggle-btn.active {
+            background-color: var(--btn-active);
+            color: var(--text-main);
+        }
+
+        /* 橫向單行度數顯示區塊 (SPH | CYL | AXIS | ADD) */
         .display-area {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
             padding: 15px;
         }
         .field-box {
             background-color: var(--card-bg);
             border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 15px 10px;
+            border-radius: 8px;
+            padding: 10px 2px;
             text-align: center;
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
         .field-box.active {
             border-color: var(--accent-blue);
             background-color: #1a2a3a;
         }
         .field-label {
-            font-size: 14px;
+            font-size: 12px;
             color: var(--text-muted);
             margin-bottom: 5px;
             font-weight: bold;
         }
         .field-value {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: bold;
             font-family: monospace;
-            min-height: 32px;
+            min-height: 24px;
+            color: var(--text-main);
         }
-        /* 顏色動態變化 */
         .val-minus { color: var(--minus-red); }
         .val-plus { color: var(--plus-green); }
 
-        /* 正負號專屬控制行 (SPH 專用) */
+        /* 正負號專屬控制行 */
         .sign-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -103,54 +133,45 @@
             padding: 0 15px 10px 15px;
         }
         .sign-btn {
-            padding: 12px;
-            font-size: 24px;
+            padding: 10px;
+            font-size: 20px;
             font-weight: bold;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            opacity: 0.3; /* 預設半透明，可用時變亮 */
+            opacity: 0.3;
         }
-        .sign-btn.active-plus {
-            background-color: var(--plus-green);
-            opacity: 1;
-        }
-        .sign-btn.active-minus {
-            background-color: var(--minus-red);
-            opacity: 1;
-        }
+        .sign-btn.active-plus { background-color: var(--plus-green); opacity: 1; }
+        .sign-btn.active-minus { background-color: var(--minus-red); opacity: 1; }
 
-        /* 標準計算機 Numpad + 右側小數點 */
+        /* 計算機排位九宮格 */
         .numpad-container {
             padding: 0 15px 15px 15px;
-            flex-grow: 1;
         }
         .numpad-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1.2fr; /* 右側小數點稍微寬一點 */
-            gap: 10px;
+            grid-template-columns: 1fr 1fr 1fr 1.2fr;
+            gap: 8px;
         }
         .num-btn {
             background-color: var(--btn-bg);
             color: var(--text-main);
             border: none;
-            border-radius: 12px;
-            font-size: 26px;
+            border-radius: 10px;
+            font-size: 24px;
             font-weight: 500;
-            height: 65px;
+            height: 55px;
         }
-        .num-btn:active {
-            background-color: var(--btn-active);
-        }
+        .num-btn:active { background-color: var(--btn-active); }
         .num-btn.special {
             background-color: #323234;
             color: var(--accent-blue);
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
         }
         .num-btn.action {
             background-color: #3a3a3c;
-            font-size: 18px;
+            font-size: 16px;
         }
         .num-btn.next-btn {
             background-color: var(--accent-blue);
@@ -159,33 +180,85 @@
             font-weight: bold;
         }
 
+        /* 臨床問題標記區 */
+        .tags-section {
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-line);
+            flex-grow: 1;
+        }
+        .section-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .tags-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .tag-btn {
+            background-color: var(--btn-bg);
+            color: var(--text-main);
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            text-align: left;
+        }
+        .tag-btn.active {
+            background-color: #4a1414; /* 深紅色背景代表選中錯誤 */
+            border-color: var(--minus-red);
+            color: white;
+        }
+        .tag-btn.success {
+            background-color: #143a1a; /* 深綠色背景代表正常 */
+            border-color: var(--plus-green);
+            color: white;
+        }
+
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="tabs">
-        <button class="tab-btn active">Student A</button>
-        <button class="tab-btn">Student B</button>
-        <button class="tab-btn">Student C</button>
+    
+    <div class="nav-section">
+        <div class="tabs-row">
+            <button class="tab-btn active">Student A</button>
+            <button class="tab-btn">Student B</button>
+            <button class="tab-btn">Student C</button>
+        </div>
+        
+        <div class="sub-nav">
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="mode-lens" onclick="switchMode('lensometry')">舊眼鏡度數</button>
+                <button class="toggle-btn" id="mode-ref" onclick="switchMode('refraction')">導師驗眼</button>
+            </div>
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="eye-od" onclick="switchEye('od')">右眼 (OD)</button>
+                <button class="toggle-btn" id="eye-os" onclick="switchEye('os')">左眼 (OS)</button>
+            </div>
+        </div>
     </div>
 
     <div class="display-area">
-        <div class="field-box active" id="box-sph" onclick="setActive('sph')">
-            <div class="field-label">SPH (球面)</div>
+        <div class="field-box active" id="box-sph" onclick="setActiveField('sph')">
+            <div class="field-label">SPH</div>
             <div class="field-value" id="val-sph"></div>
         </div>
-        <div class="field-box" id="box-cyl" onclick="setActive('cyl')">
-            <div class="field-label">CYL (散光)</div>
-            <div class="field-value" id="val-cyl">-</div>
+        <div class="field-box" id="box-cyl" onclick="setActiveField('cyl')">
+            <div class="field-label">CYL</div>
+            <div class="field-value" id="val-cyl"></div>
         </div>
-        <div class="field-box" id="box-axis" onclick="setActive('axis')">
-            <div class="field-label">AXIS (軸線)</div>
+        <div class="field-box" id="box-axis" onclick="setActiveField('axis')">
+            <div class="field-label">AXIS</div>
             <div class="field-value" id="val-axis"></div>
         </div>
-        <div class="field-box" id="box-add" onclick="setActive('add')">
-            <div class="field-label">ADD (老花)</div>
-            <div class="field-value" id="val-add">+</div>
+        <div class="field-box" id="box-add" onclick="setActiveField('add')">
+            <div class="field-label">ADD</div>
+            <div class="field-value" id="val-add"></div>
         </div>
     </div>
 
@@ -217,28 +290,95 @@
             <button class="num-btn special" onclick="inputDec('.75')">.75</button>
         </div>
     </div>
+
+    <div class="tags-section">
+        <div class="section-title">學生表現記錄 (Clinical Performance)</div>
+        <div class="tags-grid">
+            <button class="tag-btn success" onclick="this.classList.toggle('active')">度數精準 (Match)</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">SPH 偏向過度矯視</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">CYL 軸線誤差 >10度</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">舊眼鏡量度錯誤</button>
+        </div>
+        
+        <div class="section-title" style="margin-top: 15px;">雙眼協調與健康 (Cover Test & Health)</div>
+        <div class="tags-grid">
+            <button class="tag-btn success" onclick="this.classList.toggle('active')">WNL (正常)</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">異常: 外斜/內斜</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">角膜/前房 異常</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">眼底檢查 異常</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    let currentField = 'sph';
-    const fields = ['sph', 'cyl', 'axis', 'add'];
-    
-    // 預設狀態：CYL 永遠為負，ADD 永遠為正
-    let data = { sph: '', cyl: '-', axis: '', add: '+' };
+    // 狀態管理：儲存所有項目的數據
+    let state = {
+        mode: 'lensometry', // 'lensometry' 舊眼鏡 或 'refraction' 導師驗眼
+        eye: 'od',          // 'od' 右眼 或 'os' 左眼
+        field: 'sph'        // 目前活躍輸入格
+    };
 
-    // 初始化 UI
+    const fields = ['sph', 'cyl', 'axis', 'add'];
+
+    // 數據結構庫
+    let appData = {
+        lensometry: {
+            od: { sph: '', cyl: '-', axis: '', add: '+' },
+            os: { sph: '', cyl: '-', axis: '', add: '+' }
+        },
+        refraction: {
+            od: { sph: '', cyl: '-', axis: '', add: '+' },
+            os: { sph: '', cyl: '-', axis: '', add: '+' }
+        }
+    };
+
+    // 初始化
     updateDisplay();
     updateSignButtons();
 
+    // 切換量度項目 (舊眼鏡 / 導師驗眼)
+    function switchMode(newMode) {
+        formatField(state.field);
+        state.mode = newMode;
+        
+        document.getElementById('mode-lens').classList.remove('active');
+        document.getElementById('mode-ref').classList.remove('active');
+        document.getElementById(newMode === 'lensometry' ? 'mode-lens' : 'mode-ref').classList.add('active');
+        
+        setActiveField('sph');
+        updateDisplay();
+    }
+
+    // 切換眼睛 (OD / OS)
+    function switchEye(newEye) {
+        formatField(state.field);
+        state.eye = newEye;
+        
+        document.getElementById('eye-od').classList.remove('active');
+        document.getElementById('eye-os').classList.remove('active');
+        document.getElementById(newEye === 'od' ? 'eye-od' : 'eye-os').classList.add('active');
+        
+        setActiveField('sph');
+        updateDisplay();
+    }
+
+    // 獲取當前作用中的數據對象
+    function getCurrentData() {
+        return appData[state.mode][state.eye];
+    }
+
     // 更新畫面顯示與顏色
     function updateDisplay() {
-        fields.forEach(field => {
-            let val = data[field];
-            let el = document.getElementById('val-' + field);
+        let currentData = getCurrentData();
+        
+        fields.forEach(f => {
+            let val = currentData[f];
+            let el = document.getElementById('val-' + f);
             el.innerText = val;
             
-            // 顏色標示防睇漏眼
-            el.className = 'field-value'; // reset
+            // 顏色標示
+            el.className = 'field-value';
             if (val.includes('-')) el.classList.add('val-minus');
             if (val.includes('+')) el.classList.add('val-plus');
         });
@@ -252,25 +392,26 @@
         btnPlus.className = 'sign-btn';
         btnMinus.className = 'sign-btn';
 
-        if (currentField === 'cyl') {
+        if (state.field === 'cyl') {
             btnMinus.classList.add('active-minus');
-        } else if (currentField === 'add') {
+        } else if (state.field === 'add') {
             btnPlus.classList.add('active-plus');
-        } else if (currentField === 'sph') {
+        } else if (state.field === 'sph') {
             btnPlus.classList.add('active-plus');
             btnMinus.classList.add('active-minus');
         }
     }
 
     // 選擇活躍欄位
-    function setActive(field) {
-        formatField(currentField); 
-        document.getElementById('box-' + currentField).classList.remove('active');
-        currentField = field;
-        document.getElementById('box-' + currentField).classList.add('active');
+    function setActiveField(f) {
+        formatField(state.field); 
+        document.getElementById('box-' + state.field).classList.remove('active');
+        state.field = f;
+        document.getElementById('box-' + state.field).classList.add('active');
         
-        if (currentField === 'cyl' && data.cyl === '') data.cyl = '-';
-        if (currentField === 'add' && data.add === '') data.add = '+';
+        let currentData = getCurrentData();
+        if (state.field === 'cyl' && currentData.cyl === '') currentData.cyl = '-';
+        if (state.field === 'add' && currentData.add === '') currentData.add = '+';
         
         updateDisplay();
         updateSignButtons();
@@ -278,75 +419,81 @@
 
     // 強制設定正負號 (SPH 專用)
     function forceSign(sign) {
-        if (currentField === 'axis') return;
-        if (currentField === 'cyl' && sign === '+') return; 
-        if (currentField === 'add' && sign === '-') return; 
+        if (state.field === 'axis') return;
+        if (state.field === 'cyl' && sign === '+') return; 
+        if (state.field === 'add' && sign === '-') return; 
 
-        let val = data[currentField];
+        let currentData = getCurrentData();
+        let val = currentData[state.field];
+        
         if (val.startsWith('+') || val.startsWith('-')) {
-            data[currentField] = sign + val.substring(1);
+            currentData[state.field] = sign + val.substring(1);
         } else {
-            data[currentField] = sign + val;
+            currentData[state.field] = sign + val;
         }
         updateDisplay();
     }
 
     // 輸入數字
     function input(num) {
-        if (currentField === 'axis' && data[currentField].length >= 3) return;
-        data[currentField] += num;
+        let currentData = getCurrentData();
+        if (state.field === 'axis' && currentData[state.field].length >= 3) return;
+        currentData[state.field] += num;
         updateDisplay();
     }
 
-    // 輸入光學專屬小數
+    // 輸入小數
     function inputDec(dec) {
-        if (currentField === 'axis') return;
-        if (data[currentField].includes('.')) return; 
+        let currentData = getCurrentData();
+        if (state.field === 'axis') return;
+        if (currentData[state.field].includes('.')) return; 
         
-        if (data[currentField] === '' || data[currentField] === '+' || data[currentField] === '-') {
-            data[currentField] += '0' + dec;
+        if (currentData[state.field] === '' || currentData[state.field] === '+' || currentData[state.field] === '-') {
+            currentData[state.field] += '0' + dec;
         } else {
-            data[currentField] += dec;
+            currentData[state.field] += dec;
         }
         updateDisplay();
     }
 
     // 清除當前欄位
     function clearField() {
-        if (currentField === 'cyl') {
-            data.cyl = '-';
-        } else if (currentField === 'add') {
-            data.add = '+';
+        let currentData = getCurrentData();
+        if (state.field === 'cyl') {
+            currentData.cyl = '-';
+        } else if (state.field === 'add') {
+            currentData.add = '+';
         } else {
-            data[currentField] = '';
+            currentData[state.field] = '';
         }
         updateDisplay();
     }
 
     // 離開欄位時自動補零與格式化
-    function formatField(field) {
-        let val = data[field];
+    function formatField(f) {
+        let currentData = getCurrentData();
+        let val = currentData[f];
         if (!val || val === '+' || val === '-') return;
 
         let num = parseFloat(val);
         if (isNaN(num)) return;
 
-        if (field === 'axis') {
+        if (f === 'axis') {
             if (num > 180) num = num % 180;
             if (num === 0) num = 180;
-            data[field] = num.toString();
+            currentData[f] = num.toString();
         } else {
             let formatted = Math.abs(num).toFixed(2);
             let sign = val.startsWith('-') ? '-' : '+';
-            data[field] = sign + formatted;
+            currentData[f] = sign + formatted;
         }
         updateDisplay();
     }
 
     function nextField() {
-        let currentIndex = fields.indexOf(currentField);
+        let currentIndex = fields.indexOf(state.field);
         let nextIndex = (currentIndex + 1) % fields.length;
-        setActive(fields[nextIndex]);
+        setActiveField(fields[nextIndex]);
     }
 </script>
 </body>
