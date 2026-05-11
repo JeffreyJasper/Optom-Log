@@ -3,37 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Log - Optom</title>
+    <title>Clinical Log - Numpad</title>
     <style>
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-main: #ffffff;
-            --text-muted: #a0a0a0;
+            --text-muted: #888888;
             --accent-blue: #0a84ff;
-            --btn-bg: #333333;
-            --btn-active: #555555;
+            --accent-orange: #ff9f0a;
+            --btn-bg: #2c2c2e;
+            --btn-active: #48484a;
             --danger: #ff453a;
             --success: #30d158;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            padding-bottom: 80px; /* 預留底部空間 */
-            touch-action: manipulation; /* 提升點擊反應速度 */
+            user-select: none; /* 防止反白文字 */
+            touch-action: manipulation;
         }
 
-        /* 頂部學生切換標籤 */
+        /* 頂部學生切換 */
         .tabs {
             display: flex;
             background-color: var(--card-bg);
-            position: sticky;
-            top: 0;
-            z-index: 100;
             border-bottom: 1px solid #333;
         }
         .tab-btn {
@@ -51,62 +49,96 @@
             border-bottom: 3px solid var(--accent-blue);
         }
 
-        /* 內容區塊 */
-        .section {
-            background-color: var(--card-bg);
-            margin: 15px;
+        /* 顯示區塊 (Display) */
+        .display-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
             padding: 15px;
-            border-radius: 12px;
+            background-color: var(--bg-color);
         }
-        h2 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 15px;
+        .field-box {
+            background-color: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px 5px;
+            text-align: center;
+        }
+        .field-box.active {
+            border-color: var(--accent-blue);
+            background-color: #1a2a3a;
+        }
+        .field-label {
+            font-size: 12px;
             color: var(--text-muted);
-            border-bottom: 1px solid #333;
-            padding-bottom: 8px;
+            margin-bottom: 5px;
+        }
+        .field-value {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: monospace;
+            min-height: 24px;
         }
 
-        /* 增減器 (Stepper) UI */
-        .stepper-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-        .stepper-label {
-            font-size: 16px;
-            font-weight: bold;
-            width: 60px;
-        }
-        .stepper-controls {
-            display: flex;
-            align-items: center;
+        /* 九宮格鍵盤 (Numpad) */
+        .numpad-container {
             background-color: var(--bg-color);
-            border-radius: 8px;
-            overflow: hidden;
+            padding: 10px 15px;
         }
-        .stepper-btn {
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .num-btn {
             background-color: var(--btn-bg);
             color: var(--text-main);
             border: none;
-            width: 50px;
-            height: 44px; /* iOS 建議最小觸控高度 */
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 500;
+            height: 65px; /* 特大按鈕方便盲按 */
+        }
+        .num-btn:active {
+            background-color: var(--btn-active);
+        }
+        .num-btn.special {
+            background-color: #3a3a3c;
+            color: var(--accent-orange);
             font-size: 20px;
             font-weight: bold;
         }
-        .stepper-btn:active {
-            background-color: var(--btn-active);
+        .num-btn.action {
+            background-color: #3a3a3c;
+            font-size: 18px;
         }
-        .stepper-value {
-            width: 70px;
-            text-align: center;
+        
+        /* 底部跳格控制 */
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 0 15px;
+        }
+        .ctrl-btn {
+            background-color: var(--btn-bg);
+            color: var(--text-main);
+            border: none;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: bold;
-            font-family: monospace;
+            height: 60px;
+        }
+        .ctrl-btn.next {
+            background-color: var(--accent-blue);
+            color: white;
         }
 
-        /* 快捷標籤 (Quick Tags) */
+        /* 標籤區 */
+        .tags-section {
+            padding: 15px;
+        }
         .tags-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -121,151 +153,174 @@
             font-size: 14px;
         }
         .tag-btn.active {
-            background-color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-        .tag-btn.success {
-            background-color: var(--success);
-            color: #000;
-            border-color: var(--success);
-        }
-
-        /* 底部操作按鈕 */
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-top: 1px solid #333;
-            display: flex;
-            justify-content: center;
-        }
-        .sync-btn {
-            background-color: var(--accent-blue);
+            background-color: var(--danger);
+            border-color: var(--danger);
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
         }
     </style>
 </head>
 <body>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('A')">Student A</button>
-        <button class="tab-btn" onclick="switchTab('B')">Student B</button>
-        <button class="tab-btn" onclick="switchTab('C')">Student C</button>
+        <button class="tab-btn active">Student A</button>
+        <button class="tab-btn">Student B</button>
+        <button class="tab-btn">Student C</button>
     </div>
 
-    <div class="section" id="golden-standard">
-        <h2>導師標準度數 (Right Eye 示範)</h2>
-        
-        <div class="stepper-row">
-            <div class="stepper-label">SPH</div>
-            <div class="stepper-controls">
-                <button class="stepper-btn" onclick="updateValue('sph', -0.25)">-</button>
-                <div class="stepper-value" id="val-sph">0.00</div>
-                <button class="stepper-btn" onclick="updateValue('sph', 0.25)">+</button>
-            </div>
+    <div class="display-area">
+        <div class="field-box active" id="box-sph" onclick="setActive('sph')">
+            <div class="field-label">SPH</div>
+            <div class="field-value" id="val-sph"></div>
         </div>
-
-        <div class="stepper-row">
-            <div class="stepper-label">CYL</div>
-            <div class="stepper-controls">
-                <button class="stepper-btn" onclick="updateValue('cyl', -0.25)">-</button>
-                <div class="stepper-value" id="val-cyl">0.00</div>
-                <button class="stepper-btn" onclick="updateValue('cyl', 0.25)">+</button>
-            </div>
+        <div class="field-box" id="box-cyl" onclick="setActive('cyl')">
+            <div class="field-label">CYL</div>
+            <div class="field-value" id="val-cyl"></div>
         </div>
-
-        <div class="stepper-row">
-            <div class="stepper-label">AXIS</div>
-            <div class="stepper-controls">
-                <button class="stepper-btn" onclick="updateValue('axis', -5)">-</button>
-                <div class="stepper-value" id="val-axis">180</div>
-                <button class="stepper-btn" onclick="updateValue('axis', 5)">+</button>
-            </div>
+        <div class="field-box" id="box-axis" onclick="setActive('axis')">
+            <div class="field-label">AXIS</div>
+            <div class="field-value" id="val-axis"></div>
+        </div>
+        <div class="field-box" id="box-add" onclick="setActive('add')">
+            <div class="field-label">ADD</div>
+            <div class="field-value" id="val-add"></div>
         </div>
     </div>
 
-    <div class="section" id="student-record">
-        <h2>當前學生表現紀錄</h2>
+    <div class="numpad-container">
+        <div class="numpad-grid">
+            <button class="num-btn" onclick="input('7')">7</button>
+            <button class="num-btn" onclick="input('8')">8</button>
+            <button class="num-btn" onclick="input('9')">9</button>
+            <button class="num-btn special" onclick="inputDec('.00')">.00</button>
+
+            <button class="num-btn" onclick="input('4')">4</button>
+            <button class="num-btn" onclick="input('5')">5</button>
+            <button class="num-btn" onclick="input('6')">6</button>
+            <button class="num-btn special" onclick="inputDec('.25')">.25</button>
+
+            <button class="num-btn" onclick="input('1')">1</button>
+            <button class="num-btn" onclick="input('2')">2</button>
+            <button class="num-btn" onclick="input('3')">3</button>
+            <button class="num-btn special" onclick="inputDec('.50')">.50</button>
+
+            <button class="num-btn action" onclick="clearField()">C (清空)</button>
+            <button class="num-btn" onclick="input('0')">0</button>
+            <button class="num-btn action" style="color: var(--accent-blue); font-size: 28px;" onclick="toggleSign()">+/-</button>
+            <button class="num-btn special" onclick="inputDec('.75')">.75</button>
+        </div>
+    </div>
+
+    <div class="control-row">
+        <button class="ctrl-btn" onclick="prevField()">◄ 上一個</button>
+        <button class="ctrl-btn next" onclick="nextField()">完成並跳下一格 ►</button>
+    </div>
+
+    <div class="tags-section">
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">學生常見錯誤快速標記：</div>
         <div class="tags-grid">
-            <button class="tag-btn success" id="btn-match" onclick="toggleTag(this)">度數與導師一致</button>
-            <button class="tag-btn" onclick="toggleTag(this)">SPH 偏正 (Over-plus)</button>
-            <button class="tag-btn" onclick="toggleTag(this)">SPH 偏負 (Over-minus)</button>
-            <button class="tag-btn" onclick="toggleTag(this)">散光軸線 > 10度誤差</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">SPH 偏正 (Over-plus)</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">散光軸線 >10度誤差</button>
         </div>
-        
-        <h2 style="margin-top: 20px;">眼睛健康 / Cover Test</h2>
-        <div class="tags-grid">
-            <button class="tag-btn success" onclick="toggleTag(this)">全正常 (WNL)</button>
-            <button class="tag-btn" onclick="toggleTag(this)">Exophoria 隱外斜</button>
-            <button class="tag-btn" onclick="toggleTag(this)">Esophoria 隱內斜</button>
-            <button class="tag-btn" onclick="toggleTag(this)">SPK 角膜點狀破損</button>
-        </div>
-    </div>
-
-    <div class="bottom-bar">
-        <button class="sync-btn" onclick="generatePIN()">產生同步碼 (下一步實作)</button>
     </div>
 
     <script>
-        // 初始化數值
-        let values = {
-            sph: 0.00,
-            cyl: 0.00,
-            axis: 180
-        };
+        let currentField = 'sph';
+        const fields = ['sph', 'cyl', 'axis', 'add'];
+        let data = { sph: '', cyl: '', axis: '', add: '' };
 
-        // 格式化數字 (保留兩位小數並加上正負號)
-        function formatNumber(num, isAxis = false) {
-            if (isAxis) {
-                if (num <= 0) return 180;
-                if (num > 180) return num - 180;
-                return num;
-            }
-            let formatted = num.toFixed(2);
-            return num > 0 ? '+' + formatted : formatted;
+        // 更新畫面顯示
+        function updateDisplay() {
+            document.getElementById('val-' + currentField).innerText = data[currentField];
         }
 
-        // 更新度數數值
-        function updateValue(type, change) {
-            values[type] += change;
+        // 選擇活躍欄位
+        function setActive(field) {
+            // 離開前自動格式化舊欄位
+            formatField(currentField);
             
-            // 軸線特殊處理 (0-180度)
-            if (type === 'axis') {
-                values[type] = formatNumber(values[type], true);
-                document.getElementById('val-' + type).innerText = values[type];
+            // 切換新欄位
+            document.getElementById('box-' + currentField).classList.remove('active');
+            currentField = field;
+            document.getElementById('box-' + currentField).classList.add('active');
+        }
+
+        // 輸入數字
+        function input(num) {
+            // AXIS 限制最多 3 個位數
+            if (currentField === 'axis' && data[currentField].length >= 3) return;
+            
+            data[currentField] += num;
+            updateDisplay();
+        }
+
+        // 輸入專屬小數 (例如 .25)
+        function inputDec(dec) {
+            if (currentField === 'axis') return; // AXIS 沒有小數
+            if (data[currentField].includes('.')) return; // 防止輸入兩次小數點
+            
+            if (data[currentField] === '' || data[currentField] === '-') {
+                data[currentField] += '0' + dec; // 如果空著按 .25，變成 0.25
             } else {
-                document.getElementById('val-' + type).innerText = formatNumber(values[type]);
+                data[currentField] += dec;
             }
+            updateDisplay();
         }
 
-        // 切換按鈕的活躍狀態 (標籤點擊)
-        function toggleTag(btn) {
-            btn.classList.toggle('active');
-            // 若點擊非一致/非正常的按鈕，可自動取消 success 按鈕的高亮 (進階邏輯可在後續加入)
-        }
-
-        // 切換學生 Tabs
-        function switchTab(student) {
-            // 更新 Tab UI
-            let tabs = document.querySelectorAll('.tab-btn');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+        // 切換正負號
+        function toggleSign() {
+            if (currentField === 'axis') return; // AXIS 沒有負號
+            if (currentField === 'add') return;  // ADD 通常只有正號
             
-            // 這裡未來會加入讀取該學生暫存資料的邏輯
-            console.log("切換至 Student " + student);
+            let val = data[currentField];
+            if (val.startsWith('-')) {
+                data[currentField] = val.substring(1); // 拔掉負號
+            } else {
+                data[currentField] = '-' + val; // 加上負號
+            }
+            updateDisplay();
         }
 
-        function generatePIN() {
-            alert("介面測試成功！在下一步，這裡將會生成一組 4 位數 PIN 碼，並把資料送到 Supabase。");
+        // 清空當前欄位
+        function clearField() {
+            data[currentField] = '';
+            updateDisplay();
+        }
+
+        // 離開欄位時的自動格式化 (如 2 變成 +2.00)
+        function formatField(field) {
+            let val = data[field];
+            if (!val || val === '-') return;
+
+            let num = parseFloat(val);
+            if (isNaN(num)) return;
+
+            if (field === 'axis') {
+                // 軸線處理
+                if (num > 180) num = num % 180;
+                if (num === 0) num = 180;
+                data[field] = num.toString();
+            } else {
+                // SPH, CYL, ADD 處理
+                let formatted = num.toFixed(2);
+                if (num > 0) formatted = '+' + formatted;
+                if (num === 0 && field !== 'cyl') formatted = '0.00'; // CYL 可以保留 0.00 或空
+                data[field] = formatted;
+            }
+            document.getElementById('val-' + field).innerText = data[field];
+        }
+
+        // 跳下一個欄位
+        function nextField() {
+            let currentIndex = fields.indexOf(currentField);
+            let nextIndex = (currentIndex + 1) % fields.length;
+            setActive(fields[nextIndex]);
+        }
+
+        // 回上一個欄位
+        function prevField() {
+            let currentIndex = fields.indexOf(currentField);
+            let prevIndex = (currentIndex - 1 + fields.length) % fields.length;
+            setActive(fields[prevIndex]);
         }
     </script>
 </body>
