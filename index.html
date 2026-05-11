@@ -3,36 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Log - Numpad</title>
+    <title>Clinical Log - Vertical Optimized (Numpad)</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
+            --bg-color: #000000;
+            --app-bg: #121212;
+            --card-bg: #1c1c1e;
             --text-main: #ffffff;
-            --text-muted: #888888;
+            --text-muted: #8e8e93;
             --accent-blue: #0a84ff;
-            --accent-orange: #ff9f0a;
             --btn-bg: #2c2c2e;
             --btn-active: #48484a;
-            --danger: #ff453a;
-            --success: #30d158;
+            --minus-red: #ff453a;
+            --plus-green: #32d74b;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-main);
             margin: 0;
             padding: 0;
-            user-select: none; /* 防止反白文字 */
+            user-select: none;
             touch-action: manipulation;
+        }
+
+        /* 限制最大寬度，讓 iPad 垂直時也能維持手機比例，防止按鈕過大 */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: var(--app-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* 頂部學生切換 */
         .tabs {
             display: flex;
             background-color: var(--card-bg);
-            border-bottom: 1px solid #333;
         }
         .tab-btn {
             flex: 1;
@@ -49,45 +57,77 @@
             border-bottom: 3px solid var(--accent-blue);
         }
 
-        /* 顯示區塊 (Display) */
+        /* 2x2 度數顯示區塊 (極大化防睇漏) */
         .display-area {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             padding: 15px;
-            background-color: var(--bg-color);
         }
         .field-box {
             background-color: var(--card-bg);
             border: 2px solid transparent;
-            border-radius: 10px;
-            padding: 10px 5px;
+            border-radius: 12px;
+            padding: 15px 10px;
             text-align: center;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .field-box.active {
             border-color: var(--accent-blue);
             background-color: #1a2a3a;
         }
         .field-label {
-            font-size: 12px;
+            font-size: 14px;
             color: var(--text-muted);
             margin-bottom: 5px;
+            font-weight: bold;
         }
         .field-value {
-            font-size: 20px;
+            font-size: 28px;
             font-weight: bold;
             font-family: monospace;
-            min-height: 24px;
+            min-height: 32px;
+        }
+        /* 顏色動態變化 */
+        .val-minus { color: var(--minus-red); }
+        .val-plus { color: var(--plus-green); }
+
+        /* 正負號專屬控制行 (SPH 專用) */
+        .sign-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 0 15px 10px 15px;
+        }
+        .sign-btn {
+            padding: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            opacity: 0.3; /* 預設半透明，可用時變亮 */
+        }
+        .sign-btn.active-plus {
+            background-color: var(--plus-green);
+            opacity: 1;
+        }
+        .sign-btn.active-minus {
+            background-color: var(--minus-red);
+            opacity: 1;
         }
 
-        /* 九宮格鍵盤 (Numpad) */
+        /* 標準計算機 Numpad + 右側小數點 */
         .numpad-container {
-            background-color: var(--bg-color);
-            padding: 10px 15px;
+            padding: 0 15px 15px 15px;
+            flex-grow: 1;
         }
         .numpad-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: 1fr 1fr 1fr 1.2fr; /* 右側小數點稍微寬一點 */
             gap: 10px;
         }
         .num-btn {
@@ -95,16 +135,16 @@
             color: var(--text-main);
             border: none;
             border-radius: 12px;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 500;
-            height: 65px; /* 特大按鈕方便盲按 */
+            height: 65px;
         }
         .num-btn:active {
             background-color: var(--btn-active);
         }
         .num-btn.special {
-            background-color: #3a3a3c;
-            color: var(--accent-orange);
+            background-color: #323234;
+            color: var(--accent-blue);
             font-size: 20px;
             font-weight: bold;
         }
@@ -112,55 +152,18 @@
             background-color: #3a3a3c;
             font-size: 18px;
         }
-        
-        /* 底部跳格控制 */
-        .control-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 10px;
-            margin-top: 10px;
-            padding: 0 15px;
-        }
-        .ctrl-btn {
-            background-color: var(--btn-bg);
-            color: var(--text-main);
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            height: 60px;
-        }
-        .ctrl-btn.next {
+        .num-btn.next-btn {
             background-color: var(--accent-blue);
             color: white;
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        /* 標籤區 */
-        .tags-section {
-            padding: 15px;
-        }
-        .tags-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .tag-btn {
-            background-color: var(--btn-bg);
-            color: var(--text-main);
-            border: 1px solid #444;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .tag-btn.active {
-            background-color: var(--danger);
-            border-color: var(--danger);
-            color: white;
-        }
     </style>
 </head>
 <body>
 
+<div class="app-container">
     <div class="tabs">
         <button class="tab-btn active">Student A</button>
         <button class="tab-btn">Student B</button>
@@ -169,21 +172,26 @@
 
     <div class="display-area">
         <div class="field-box active" id="box-sph" onclick="setActive('sph')">
-            <div class="field-label">SPH</div>
+            <div class="field-label">SPH (球面)</div>
             <div class="field-value" id="val-sph"></div>
         </div>
         <div class="field-box" id="box-cyl" onclick="setActive('cyl')">
-            <div class="field-label">CYL</div>
-            <div class="field-value" id="val-cyl"></div>
+            <div class="field-label">CYL (散光)</div>
+            <div class="field-value" id="val-cyl">-</div>
         </div>
         <div class="field-box" id="box-axis" onclick="setActive('axis')">
-            <div class="field-label">AXIS</div>
+            <div class="field-label">AXIS (軸線)</div>
             <div class="field-value" id="val-axis"></div>
         </div>
         <div class="field-box" id="box-add" onclick="setActive('add')">
-            <div class="field-label">ADD</div>
-            <div class="field-value" id="val-add"></div>
+            <div class="field-label">ADD (老花)</div>
+            <div class="field-value" id="val-add">+</div>
         </div>
+    </div>
+
+    <div class="sign-row">
+        <button class="sign-btn" id="btn-plus" onclick="forceSign('+')">＋ (正數)</button>
+        <button class="sign-btn" id="btn-minus" onclick="forceSign('-')">－ (負數)</button>
     </div>
 
     <div class="numpad-container">
@@ -203,125 +211,143 @@
             <button class="num-btn" onclick="input('3')">3</button>
             <button class="num-btn special" onclick="inputDec('.50')">.50</button>
 
-            <button class="num-btn action" onclick="clearField()">C (清空)</button>
+            <button class="num-btn action" onclick="clearField()">清除</button>
             <button class="num-btn" onclick="input('0')">0</button>
-            <button class="num-btn action" style="color: var(--accent-blue); font-size: 28px;" onclick="toggleSign()">+/-</button>
+            <button class="num-btn next-btn" onclick="nextField()">跳下一格</button>
             <button class="num-btn special" onclick="inputDec('.75')">.75</button>
         </div>
     </div>
+</div>
 
-    <div class="control-row">
-        <button class="ctrl-btn" onclick="prevField()">◄ 上一個</button>
-        <button class="ctrl-btn next" onclick="nextField()">完成並跳下一格 ►</button>
-    </div>
+<script>
+    let currentField = 'sph';
+    const fields = ['sph', 'cyl', 'axis', 'add'];
+    
+    // 預設狀態：CYL 永遠為負，ADD 永遠為正
+    let data = { sph: '', cyl: '-', axis: '', add: '+' };
 
-    <div class="tags-section">
-        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">學生常見錯誤快速標記：</div>
-        <div class="tags-grid">
-            <button class="tag-btn" onclick="this.classList.toggle('active')">SPH 偏正 (Over-plus)</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">散光軸線 >10度誤差</button>
-        </div>
-    </div>
+    // 初始化 UI
+    updateDisplay();
+    updateSignButtons();
 
-    <script>
-        let currentField = 'sph';
-        const fields = ['sph', 'cyl', 'axis', 'add'];
-        let data = { sph: '', cyl: '', axis: '', add: '' };
-
-        // 更新畫面顯示
-        function updateDisplay() {
-            document.getElementById('val-' + currentField).innerText = data[currentField];
-        }
-
-        // 選擇活躍欄位
-        function setActive(field) {
-            // 離開前自動格式化舊欄位
-            formatField(currentField);
-            
-            // 切換新欄位
-            document.getElementById('box-' + currentField).classList.remove('active');
-            currentField = field;
-            document.getElementById('box-' + currentField).classList.add('active');
-        }
-
-        // 輸入數字
-        function input(num) {
-            // AXIS 限制最多 3 個位數
-            if (currentField === 'axis' && data[currentField].length >= 3) return;
-            
-            data[currentField] += num;
-            updateDisplay();
-        }
-
-        // 輸入專屬小數 (例如 .25)
-        function inputDec(dec) {
-            if (currentField === 'axis') return; // AXIS 沒有小數
-            if (data[currentField].includes('.')) return; // 防止輸入兩次小數點
-            
-            if (data[currentField] === '' || data[currentField] === '-') {
-                data[currentField] += '0' + dec; // 如果空著按 .25，變成 0.25
-            } else {
-                data[currentField] += dec;
-            }
-            updateDisplay();
-        }
-
-        // 切換正負號
-        function toggleSign() {
-            if (currentField === 'axis') return; // AXIS 沒有負號
-            if (currentField === 'add') return;  // ADD 通常只有正號
-            
-            let val = data[currentField];
-            if (val.startsWith('-')) {
-                data[currentField] = val.substring(1); // 拔掉負號
-            } else {
-                data[currentField] = '-' + val; // 加上負號
-            }
-            updateDisplay();
-        }
-
-        // 清空當前欄位
-        function clearField() {
-            data[currentField] = '';
-            updateDisplay();
-        }
-
-        // 離開欄位時的自動格式化 (如 2 變成 +2.00)
-        function formatField(field) {
+    // 更新畫面顯示與顏色
+    function updateDisplay() {
+        fields.forEach(field => {
             let val = data[field];
-            if (!val || val === '-') return;
+            let el = document.getElementById('val-' + field);
+            el.innerText = val;
+            
+            // 顏色標示防睇漏眼
+            el.className = 'field-value'; // reset
+            if (val.includes('-')) el.classList.add('val-minus');
+            if (val.includes('+')) el.classList.add('val-plus');
+        });
+    }
 
-            let num = parseFloat(val);
-            if (isNaN(num)) return;
+    // 更新正負號按鈕的亮起狀態
+    function updateSignButtons() {
+        let btnPlus = document.getElementById('btn-plus');
+        let btnMinus = document.getElementById('btn-minus');
+        
+        btnPlus.className = 'sign-btn';
+        btnMinus.className = 'sign-btn';
 
-            if (field === 'axis') {
-                // 軸線處理
-                if (num > 180) num = num % 180;
-                if (num === 0) num = 180;
-                data[field] = num.toString();
-            } else {
-                // SPH, CYL, ADD 處理
-                let formatted = num.toFixed(2);
-                if (num > 0) formatted = '+' + formatted;
-                if (num === 0 && field !== 'cyl') formatted = '0.00'; // CYL 可以保留 0.00 或空
-                data[field] = formatted;
-            }
-            document.getElementById('val-' + field).innerText = data[field];
+        if (currentField === 'cyl') {
+            btnMinus.classList.add('active-minus');
+        } else if (currentField === 'add') {
+            btnPlus.classList.add('active-plus');
+        } else if (currentField === 'sph') {
+            btnPlus.classList.add('active-plus');
+            btnMinus.classList.add('active-minus');
         }
+    }
 
-        // 跳下一個欄位
-        function nextField() {
-            let currentIndex = fields.indexOf(currentField);
-            let nextIndex = (currentIndex + 1) % fields.length;
-            setActive(fields[nextIndex]);
-        }
+    // 選擇活躍欄位
+    function setActive(field) {
+        formatField(currentField); 
+        document.getElementById('box-' + currentField).classList.remove('active');
+        currentField = field;
+        document.getElementById('box-' + currentField).classList.add('active');
+        
+        if (currentField === 'cyl' && data.cyl === '') data.cyl = '-';
+        if (currentField === 'add' && data.add === '') data.add = '+';
+        
+        updateDisplay();
+        updateSignButtons();
+    }
 
-        // 回上一個欄位
-        function prevField() {
-            let currentIndex = fields.indexOf(currentField);
-            let prevIndex = (currentIndex - 1 + fields.length) % fields.length;
-            setActive(fields[prevIndex]);
+    // 強制設定正負號 (SPH 專用)
+    function forceSign(sign) {
+        if (currentField === 'axis') return;
+        if (currentField === 'cyl' && sign === '+') return; 
+        if (currentField === 'add' && sign === '-') return; 
+
+        let val = data[currentField];
+        if (val.startsWith('+') || val.startsWith('-')) {
+            data[currentField] = sign + val.substring(1);
+        } else {
+            data[currentField] = sign + val;
         }
-    </script>
+        updateDisplay();
+    }
+
+    // 輸入數字
+    function input(num) {
+        if (currentField === 'axis' && data[currentField].length >= 3) return;
+        data[currentField] += num;
+        updateDisplay();
+    }
+
+    // 輸入光學專屬小數
+    function inputDec(dec) {
+        if (currentField === 'axis') return;
+        if (data[currentField].includes('.')) return; 
+        
+        if (data[currentField] === '' || data[currentField] === '+' || data[currentField] === '-') {
+            data[currentField] += '0' + dec;
+        } else {
+            data[currentField] += dec;
+        }
+        updateDisplay();
+    }
+
+    // 清除當前欄位
+    function clearField() {
+        if (currentField === 'cyl') {
+            data.cyl = '-';
+        } else if (currentField === 'add') {
+            data.add = '+';
+        } else {
+            data[currentField] = '';
+        }
+        updateDisplay();
+    }
+
+    // 離開欄位時自動補零與格式化
+    function formatField(field) {
+        let val = data[field];
+        if (!val || val === '+' || val === '-') return;
+
+        let num = parseFloat(val);
+        if (isNaN(num)) return;
+
+        if (field === 'axis') {
+            if (num > 180) num = num % 180;
+            if (num === 0) num = 180;
+            data[field] = num.toString();
+        } else {
+            let formatted = Math.abs(num).toFixed(2);
+            let sign = val.startsWith('-') ? '-' : '+';
+            data[field] = sign + formatted;
+        }
+        updateDisplay();
+    }
+
+    function nextField() {
+        let currentIndex = fields.indexOf(currentField);
+        let nextIndex = (currentIndex + 1) % fields.length;
+        setActive(fields[nextIndex]);
+    }
+</script>
 </body>
 </html>
