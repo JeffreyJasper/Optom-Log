@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Optom Clinical Assistant V2</title>
+    <title>Optom Clinical Assistant V3</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -14,6 +14,7 @@
             --accent-green: #32d74b;
             --accent-red: #ff453a;
             --border: #333333;
+            --cell-active: #1a2a3a;
         }
 
         body {
@@ -24,190 +25,275 @@
 
         .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* 導航區 */
+        /* 三層導航區 */
         .nav-header { background: var(--card-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: bold; }
-        .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
+        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: bold; }
+        .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background: #121212; }
+        
+        .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
+        .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold;}
+        .m-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        /* 輸入切換 (Lens vs Rx) */
-        .input-toggle { display: flex; padding: 10px; gap: 10px; background: #121212; }
-        .toggle-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; }
-        .toggle-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-
-        /* 度數顯示區 */
-        .rx-display { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; }
-        .rx-box { background: var(--card-bg); border-radius: 8px; padding: 8px 2px; text-align: center; border: 2px solid transparent; }
-        .rx-box.active { border-color: var(--accent-blue); }
-        .rx-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
-        .rx-val { font-size: 18px; font-weight: bold; font-family: monospace; }
+        /* 雙行度數顯示區 (R / L) */
+        .rx-matrix { padding: 10px; background: var(--bg-color); }
+        .rx-header { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 4px; }
+        .rx-header div { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; }
+        
+        .rx-row { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 8px; align-items: center; }
+        .eye-lbl { font-size: 16px; font-weight: bold; color: var(--text-muted); text-align: center; }
+        .rx-cell { 
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; 
+            height: 44px; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: bold; font-family: monospace; color: var(--text-main);
+        }
+        .rx-cell.active { border-color: var(--accent-blue); background: var(--cell-active); }
         .val-minus { color: var(--accent-red); }
         .val-plus { color: var(--accent-green); }
 
-        /* 九宮格鍵盤 - 緊貼在輸入區下方 */
-        .numpad-container { padding: 5px 10px 15px 10px; background: #000; }
+        /* 九宮格鍵盤 */
+        .numpad { padding: 0 10px 15px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
         .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n:active { background: #48484a; }
-        .btn-n.blue { color: var(--accent-blue); font-size: 16px; }
-        .btn-n.action { background: #3a3a3c; font-size: 14px; }
-        .btn-n.sign { color: var(--accent-green); font-size: 24px; }
+        .btn-n.dec { color: var(--accent-blue); font-size: 18px; font-weight: bold; background: #1c1c1e; border: 1px solid #333;}
+        .btn-n.action { background: #3a3a3c; font-size: 16px; }
+        .btn-n.sign { color: var(--accent-green); font-size: 22px; }
 
-        /* 標籤分類區 - 捲軸式 */
-        .tags-container { padding: 10px; flex-grow: 1; }
-        .tag-group { margin-bottom: 15px; }
-        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
-        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; }
-        .tag.active { border-color: var(--accent-red); background: #2a1010; }
+        /* 分類標籤區 */
+        .tags-container { padding: 15px; flex-grow: 1; background: var(--bg-color); }
+        .tag-group { margin-bottom: 18px; }
+        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;}
+        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 8px; border-radius: 6px; font-size: 12px; text-align: left; line-height: 1.3;}
+        .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
 
-        /* 底部評分與評語 */
+        /* 底部評分與意見區 */
         .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); }
-        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .score-label { font-size: 13px; font-weight: bold; }
-        .score-btns { display: flex; gap: 4px; }
-        .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: none; color: var(--text-muted); font-size: 12px; }
+        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .score-label { font-size: 13px; font-weight: bold; width: 80px;}
+        .score-btns { display: flex; gap: 6px; }
+        .s-btn { width: 32px; height: 32px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 13px; font-weight: bold;}
         .s-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; }
+        textarea { width: 100%; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: white; padding: 12px; font-size: 14px; margin-top: 5px; box-sizing: border-box; min-height: 80px;}
 
-        .action-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .act-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; }
-        .btn-sum { background: var(--accent-blue); color: white; }
+        .btn-sum { width: 100%; background: var(--accent-blue); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px;}
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    
     <div class="nav-header">
-        <div class="tabs" id="student-tabs">
-            <button class="tab-btn active" onclick="switchS(1)">S1</button>
-            <button class="tab-btn" onclick="switchS(2)">S2</button>
-            <button class="tab-btn" onclick="switchS(3)">S3</button>
-            <button class="tab-btn" onclick="switchS(4)">S4</button>
+        <div class="tabs" id="nav-s">
+            <button class="tab-btn active" onclick="setS(1)">Student 1</button>
+            <button class="tab-btn" onclick="setS(2)">Student 2</button>
+            <button class="tab-btn" onclick="setS(3)">Student 3</button>
+            <button class="tab-btn" onclick="setS(4)">Student 4</button>
         </div>
-        <div class="tabs" id="patient-tabs">
-            <button class="tab-btn active" onclick="switchP(1)">P1</button>
-            <button class="tab-btn" onclick="switchP(2)">P2</button>
-            <button class="tab-btn" onclick="switchEye('OD')">OD (右)</button>
-            <button class="tab-btn" onclick="switchEye('OS')">OS (左)</button>
+        <div class="tabs" id="nav-p">
+            <button class="tab-btn active" onclick="setP(1)">Patient 1</button>
+            <button class="tab-btn" onclick="setP(2)">Patient 2</button>
         </div>
-        <div class="input-toggle">
-            <button class="toggle-btn active" id="mode-lens" onclick="setMode('lens')">病人眼鏡 (Lens)</button>
-            <button class="toggle-btn" id="mode-rx" onclick="setMode('rx')">導師驗眼 (Rx)</button>
+        <div class="mode-toggle">
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">舊眼鏡度數</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">導師驗眼紀錄</button>
         </div>
     </div>
 
-    <div class="rx-display">
-        <div class="rx-box active" id="box-sph" onclick="setF('sph')"><div class="rx-label">SPH</div><div class="rx-val" id="v-sph">+0.00</div></div>
-        <div class="rx-box" id="box-cyl" onclick="setF('cyl')"><div class="rx-label">CYL</div><div class="rx-val" id="v-cyl">-0.00</div></div>
-        <div class="rx-box" id="box-axis" onclick="setF('axis')"><div class="rx-label">AXIS</div><div class="rx-val" id="v-axis">180</div></div>
-        <div class="rx-box" id="box-add" onclick="setF('add')"><div class="rx-label">ADD</div><div class="rx-val" id="v-add">+0.00</div></div>
+    <div class="rx-matrix">
+        <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
+        
+        <div class="rx-row">
+            <div class="eye-lbl">R</div>
+            <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
+            <div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div>
+            <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
+            <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
+        </div>
+        
+        <div class="rx-row">
+            <div class="eye-lbl">L</div>
+            <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
+            <div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div>
+            <div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div>
+            <div class="rx-cell" id="c-OS-add" onclick="setF('OS','add')"></div>
+        </div>
     </div>
 
-    <div class="numpad-container">
+    <div class="numpad">
         <div class="numpad-grid">
-            <button class="btn-n" onclick="k('7')">7</button><button class="btn-n" onclick="k('8')">8</button><button class="btn-n" onclick="k('9')">9</button><button class="btn-n blue" onclick="d('.00')">.00</button>
-            <button class="btn-n" onclick="k('4')">4</button><button class="btn-n" onclick="k('5')">5</button><button class="btn-n" onclick="k('6')">6</button><button class="btn-n blue" onclick="d('.25')">.25</button>
-            <button class="btn-n" onclick="k('1')">1</button><button class="btn-n" onclick="k('2')">2</button><button class="btn-n" onclick="k('3')">3</button><button class="btn-n blue" onclick="d('.50')">.50</button>
-            <button class="btn-n sign" onclick="toggleSign()">+/-</button><button class="btn-n" onclick="k('0')">0</button><button class="btn-n action" onclick="clearF()">C</button><button class="btn-n blue" onclick="d('.75')">.75</button>
+            <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
+            <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
+            <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
+            <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C (清)</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
         </div>
     </div>
 
     <div class="tags-container">
-        <div class="tag-group"><div class="group-title">Hx Taking</div><div class="tag-grid" id="tags-hx"></div></div>
-        <div class="tag-group"><div class="group-title">Preliminary Test</div><div class="tag-grid" id="tags-pre"></div></div>
-        <div class="tag-group"><div class="group-title">Refraction</div><div class="tag-grid" id="tags-ref"></div></div>
-        <div class="tag-group"><div class="group-title">EOH</div><div class="tag-grid" id="tags-eoh"></div></div>
-        <div class="tag-group"><div class="group-title">IOH</div><div class="tag-grid" id="tags-ioh"></div></div>
+        <div class="tag-group"><div class="group-title">Hx Taking</div><div class="tag-grid" id="tg-hx"></div></div>
+        <div class="tag-group"><div class="group-title">Preliminary Test</div><div class="tag-grid" id="tg-pre"></div></div>
+        <div class="tag-group"><div class="group-title">Refraction</div><div class="tag-grid" id="tg-ref"></div></div>
+        <div class="tag-group"><div class="group-title">EOH</div><div class="tag-grid" id="tg-eoh"></div></div>
+        <div class="tag-group"><div class="group-title">IOH</div><div class="tag-grid" id="tg-ioh"></div></div>
     </div>
 
     <div class="footer-section">
-        <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="s-prof"></div></div>
-        <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="s-fluency"></div></div>
-        <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="s-accuracy"></div></div>
-        <textarea id="others-txt" placeholder="Others: 手打意見或點擊語音輸入..."></textarea>
-        <div class="action-btns">
-            <button class="act-btn btn-sum" onclick="getSummary()">生成 AI 總結</button>
-        </div>
+        <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
+        <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
+        <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
+        
+        <div style="margin-top: 15px; font-size: 13px; font-weight: bold; color: var(--accent-blue);">Others / 教學評語</div>
+        <textarea id="txt-note" placeholder="可點擊鍵盤麥克風用語音輸入..."></textarea>
+        
+        <button class="btn-sum" onclick="genSum()">複製 AI 總結摘要</button>
     </div>
+
 </div>
 
 <script>
-    let curS = 1, curP = 1, curE = 'OD', curM = 'lens', curF = 'sph';
-    const tagList = {
-        hx: ['主訴不明確', '漏問病歷', '藥物史不詳'],
-        pre: ['CT 判斷錯誤', 'NPC 量度不準', '漏查瞳孔反應'],
-        ref: ['SPH 過度矯視', 'CYL 軸線 >10度', 'JCC 操作錯誤', '未做平衡檢查'],
-        eoh: ['漏看角膜異物', '淚膜評估不準', '眼瞼檢查遺漏'],
-        ioh: ['C/D Ratio 誤判', '漏看黃斑特徵', '周邊視網膜未查']
+    // 狀態變數
+    let cS = 1, cP = 1, cM = 'lens'; 
+    let activeEye = 'OD', activeFld = 'sph';
+    
+    // 標籤資料庫
+    const tagsDB = {
+        hx: ['Chief Complaint 不清', '漏問病歷/家族史', '藥物史不詳'],
+        pre: ['Cover Test 判斷錯', 'NPC 量度不準', '漏查瞳孔反應', 'EOM 檢查不完整'],
+        ref: ['SPH 過度矯視 (-)', 'CYL 軸線 >10度誤差', 'JCC 操作錯誤', '未做雙眼平衡', '舊眼鏡量度錯'],
+        eoh: ['漏看角膜異物/SPK', '淚膜評估不準確', '眼瞼/睫毛檢查遺漏', '前房深度評估錯'],
+        ioh: ['C/D Ratio 誤判', '漏看黃斑特徵', '未檢查周邊視網膜', '血管比例評估錯']
     };
 
-    let db = JSON.parse(localStorage.getItem('optom_v2')) || {};
+    let db = JSON.parse(localStorage.getItem('optom_v3')) || {};
+
+    // 基礎狀態設定 (SPH:+, CYL:-, AXIS:'', ADD:+)
+    function getBase(f) { return f==='cyl'?'-':(f==='axis'?'':'+'); }
+
     function init() {
-        for(let s=1;s<=4;s++) { if(!db[s]) db[s]={}; for(let p=1;p<=2;p++) { if(!db[s][p]) db[s][p]={ lens:{OD:resetRx(),OS:resetRx()}, rx:{OD:resetRx(),OS:resetRx()}, tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' }; } }
+        for(let s=1; s<=4; s++) { 
+            if(!db[s]) db[s]={}; 
+            for(let p=1; p<=2; p++) { 
+                if(!db[s][p]) db[s][p] = { 
+                    lens: {OD:{sph:'+',cyl:'-',axis:'',add:'+'}, OS:{sph:'+',cyl:'-',axis:'',add:'+'}}, 
+                    rx: {OD:{sph:'+',cyl:'-',axis:'',add:'+'}, OS:{sph:'+',cyl:'-',axis:'',add:'+'}}, 
+                    tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' 
+                }; 
+            } 
+        }
         renderTags(); renderScores(); render();
     }
-    function resetRx() { return {sph:'+0.00',cyl:'-0.00',axis:'180',add:'+0.00'}; }
-    function save() { localStorage.setItem('optom_v2', JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v3', JSON.stringify(db)); }
 
+    // 渲染靜態 HTML
     function renderTags() {
-        for(let cat in tagList) {
-            document.getElementById('tags-'+cat).innerHTML = tagList[cat].map(t => `<button class="tag" onclick="tglTag('${t}')">${t}</button>`).join('');
+        for(let cat in tagsDB) {
+            document.getElementById('tg-'+cat).innerHTML = tagsDB[cat].map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
         }
     }
     function renderScores() {
         ['prof','fluency','accuracy'].forEach(id => {
-            document.getElementById('s-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setS('${id}',${n})">${n}</button>`).join('');
+            document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join('');
         });
     }
 
+    // 更新畫面數據
     function render() {
-        let d = db[curS][curP];
-        let rx = d[curM][curE];
-        ['sph','cyl','axis','add'].forEach(f => {
-            let el = document.getElementById('v-'+f); el.innerText = rx[f];
-            el.className = 'rx-val ' + (rx[f].includes('-') ? 'val-minus' : (rx[f].includes('+') ? 'val-plus' : ''));
+        let d = db[cS][cP];
+        let rxData = d[cM];
+        
+        ['OD','OS'].forEach(eye => {
+            ['sph','cyl','axis','add'].forEach(f => {
+                let cell = document.getElementById(`c-${eye}-${f}`);
+                let val = rxData[eye][f];
+                cell.innerText = val;
+                
+                // 顏色處理
+                cell.classList.remove('val-minus', 'val-plus');
+                if(val.length > 1 || f === 'axis') { 
+                    if(val.includes('-')) cell.classList.add('val-minus');
+                    if(val.includes('+')) cell.classList.add('val-plus');
+                }
+            });
         });
+
+        // 更新標籤、分數、文字
         document.querySelectorAll('.tag').forEach(b => b.classList.toggle('active', d.tags.includes(b.innerText)));
         ['prof','fluency','accuracy'].forEach(id => {
-            document.querySelectorAll(`#s-${id} .s-btn`).forEach((b,i) => b.classList.toggle('active', i+1==d.scores[id]));
+            document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i) => b.classList.toggle('active', i+1==d.scores[id]));
         });
-        document.getElementById('others-txt').value = d.note;
+        document.getElementById('txt-note').value = d.note;
     }
 
-    function switchS(s) { curS=s; updateNav('student-tabs',s-1); render(); }
-    function switchP(p) { curP=p; updateNav('patient-tabs',p-1); render(); }
-    function switchEye(e) { curE=e; updateNav('patient-tabs', e=='OD'?2:3); render(); }
-    function setMode(m) { curM=m; document.getElementById('mode-lens').classList.toggle('active', m=='lens'); document.getElementById('mode-rx').classList.toggle('active', m=='rx'); render(); }
-    function updateNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i) => b.classList.toggle('active', i==idx)); }
+    // 導航切換
+    function setS(s) { cS=s; updNav('nav-s', s-1); render(); }
+    function setP(p) { cP=p; updNav('nav-p', p-1); render(); }
+    function updNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i) => b.classList.toggle('active', i==idx)); }
+    function setM(m) { 
+        cM = m; 
+        document.getElementById('btn-lens').classList.toggle('active', m==='lens'); 
+        document.getElementById('btn-rx').classList.toggle('active', m==='rx'); 
+        render(); 
+    }
 
-    function setF(f) { curF=f; document.querySelectorAll('.rx-box').forEach(b => b.classList.toggle('active', b.id=='box-'+f)); }
-    function k(n) { let rx = db[curS][curP][curM][curE]; if(curF=='axis' && rx[curF].length>=3) return; rx[curF]+=n; save(); render(); }
-    function d(v) { let rx = db[curS][curP][curM][curE]; if(curF=='axis' || rx[curF].includes('.')) return; rx[curF]+=v; save(); render(); }
-    function toggleSign() {
-        if(curF=='axis') return;
-        let rx = db[curS][curP][curM][curE];
-        rx[curF] = rx[curF].startsWith('-') ? '+'+rx[curF].substring(1) : '-'+(rx[curF].startsWith('+')?rx[curF].substring(1):rx[curF]);
+    // 設定活躍輸入格
+    function setF(eye, fld) {
+        activeEye = eye; activeFld = fld;
+        document.querySelectorAll('.rx-cell').forEach(c => c.classList.remove('active'));
+        document.getElementById(`c-${eye}-${fld}`).classList.add('active');
+    }
+
+    // 鍵盤輸入邏輯
+    function inN(n) { 
+        let v = db[cS][cP][cM][activeEye][activeFld]; 
+        if(activeFld==='axis' && v.length>=3) return; 
+        db[cS][cP][cM][activeEye][activeFld] += n; 
+        save(); render(); 
+    }
+    function inD(d) { 
+        let v = db[cS][cP][cM][activeEye][activeFld]; 
+        if(activeFld==='axis' || v.includes('.')) return; 
+        if(v === '+' || v === '-' || v === '') {
+            db[cS][cP][cM][activeEye][activeFld] += '0' + d; 
+        } else {
+            db[cS][cP][cM][activeEye][activeFld] += d;
+        }
+        save(); render(); 
+    }
+    function tglSign() {
+        if(activeFld !== 'sph') return; // 只允許 SPH 切換正負
+        let v = db[cS][cP][cM][activeEye][activeFld];
+        if(v.startsWith('+')) db[cS][cP][cM][activeEye][activeFld] = '-' + v.substring(1);
+        else if(v.startsWith('-')) db[cS][cP][cM][activeEye][activeFld] = '+' + v.substring(1);
+        else db[cS][cP][cM][activeEye][activeFld] = '-';
         save(); render();
     }
-    function clearF() { db[curS][curP][curM][curE][curF] = (curF=='cyl'?'-':(curF=='axis'?'':'+')); save(); render(); }
-    function tglTag(t) { let ts = db[curS][curP].tags; if(ts.includes(t)) db[curS][curP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
-    function setS(id, n) { db[curS][curP].scores[id]=n; save(); render(); }
-    document.getElementById('others-txt').oninput = (e) => { db[curS][curP].note = e.target.value; save(); };
-
-    function getSummary() {
-        let r = "Clinical Log V2:\n";
-        for(let s=1;s<=4;s++) {
-            r += `S${s}: `;
-            for(let p=1;p<=2;p++) {
-                let d = db[s][p];
-                r += `P${p}[Lens OD:${d.lens.OD.sph}, Rx OD:${d.rx.OD.sph}, Tags:${d.tags.join('/')}, Score:${d.scores.accuracy}], `;
-            }
-            r += "\n";
-        }
-        navigator.clipboard.writeText(r); alert("已複製總結，請貼上給 AI。");
+    function clr() { 
+        db[cS][cP][cM][activeEye][activeFld] = getBase(activeFld); 
+        save(); render(); 
     }
+
+    // 標籤與評分邏輯
+    function tglT(t) { let ts = db[cS][cP].tags; if(ts.includes(t)) db[cS][cP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
+    function setSc(id, n) { db[cS][cP].scores[id]=n; save(); render(); }
+    document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
+
+    // 匯出摘要
+    function genSum() {
+        let r = "Clinical Log V3:\n";
+        for(let s=1; s<=4; s++) {
+            r += `\nStudent ${s}:\n`;
+            for(let p=1; p<=2; p++) {
+                let d = db[s][p];
+                if(d.tags.length > 0 || d.note !== '') {
+                    r += `  Patient ${p}:\n    Rx_R: ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis}\n    Rx_L: ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n    Tags: [${d.tags.join(', ')}]\n    Scores: P(${d.scores.prof}) F(${d.scores.fluency}) A(${d.scores.accuracy})\n    Notes: ${d.note}\n`;
+                }
+            }
+        }
+        navigator.clipboard.writeText(r); alert("已複製總結摘要，請貼上給 AI 進行分析。");
+    }
+
     init();
 </script>
 </body>
