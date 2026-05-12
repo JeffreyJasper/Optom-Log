@@ -3,498 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Log - Complete Interface</title>
+    <title>Optom Clinical AI Assistant</title>
     <style>
         :root {
             --bg-color: #000000;
-            --app-bg: #121212;
-            --card-bg: #1e1e1e;
+            --card-bg: #1c1c1e;
             --text-main: #ffffff;
-            --text-muted: #9e9e9e;
+            --text-muted: #8e8e93;
             --accent-blue: #0a84ff;
-            --btn-bg: #2c2c2e;
+            --accent-green: #32d74b;
+            --accent-red: #ff453a;
+            --border: #333333;
             --btn-active: #48484a;
-            --minus-red: #ff453a;
-            --plus-green: #32d74b;
-            --border-line: #333333;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            touch-action: manipulation;
+            margin: 0; padding: 0;
+            user-select: none; touch-action: manipulation;
         }
 
         .app-container {
-            max-width: 500px;
-            margin: 0 auto;
-            background-color: var(--app-bg);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            max-width: 500px; margin: 0 auto;
+            min-height: 100vh; display: flex; flex-direction: column;
         }
 
-        /* 頂部導航與切換標籤 */
-        .nav-section {
+        /* 雙層標籤導航 */
+        .header-nav {
             background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-line);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
         }
-        
-        .tabs-row {
-            display: flex;
-            border-bottom: 1px solid var(--border-line);
+        .student-tabs, .patient-tabs {
+            display: flex; border-bottom: 1px solid var(--border);
         }
-        .tab-btn {
-            flex: 1;
-            padding: 12px 0;
-            text-align: center;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 15px;
-            font-weight: bold;
+        .nav-btn {
+            flex: 1; padding: 12px 0; border: none; background: none;
+            color: var(--text-muted); font-size: 14px; font-weight: bold;
         }
-        .tab-btn.active {
-            color: var(--accent-blue);
-            border-bottom: 3px solid var(--accent-blue);
+        .nav-btn.active {
+            color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue);
         }
+        .patient-tabs { background-color: #121212; }
+        .patient-tabs .nav-btn.active { color: var(--accent-green); border-bottom-color: var(--accent-green); }
 
-        /* 次級切換 (項目與左右眼) */
-        .sub-nav {
-            display: flex;
-            padding: 10px 15px;
-            gap: 10px;
-        }
-        .toggle-group {
-            display: flex;
-            flex: 1;
-            background-color: var(--bg-color);
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border-line);
-        }
-        .toggle-btn {
-            flex: 1;
-            padding: 8px 0;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .toggle-btn.active {
-            background-color: var(--btn-active);
-            color: var(--text-main);
-        }
+        /* 核心內容區 */
+        .content-body { padding: 15px; flex-grow: 1; }
 
-        /* 橫向單行度數顯示區塊 (SPH | CYL | AXIS | ADD) */
-        .display-area {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            padding: 15px;
+        /* 臨床里程碑 (計時區) */
+        .milestone-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
         }
-        .field-box {
-            background-color: var(--card-bg);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 10px 2px;
-            text-align: center;
+        .m-btn {
+            background-color: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); padding: 10px 5px;
+            font-size: 12px; text-align: center;
         }
-        .field-box.active {
-            border-color: var(--accent-blue);
-            background-color: #1a2a3a;
-        }
-        .field-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .field-value {
-            font-size: 20px;
-            font-weight: bold;
-            font-family: monospace;
-            min-height: 24px;
-            color: var(--text-main);
-        }
-        .val-minus { color: var(--minus-red); }
-        .val-plus { color: var(--plus-green); }
+        .m-btn.active { background-color: #2c2c2e; border-color: var(--accent-blue); }
+        .time-display { font-size: 10px; color: var(--accent-blue); display: block; margin-top: 4px; }
 
-        /* 正負號專屬控制行 */
-        .sign-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            padding: 0 15px 10px 15px;
+        /* 數據快速輸入 (Rx Reference) */
+        .rx-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;
         }
-        .sign-btn {
-            padding: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            opacity: 0.3;
+        .rx-box {
+            background-color: var(--card-bg); border-radius: 8px; padding: 8px;
+            text-align: center; border: 2px solid transparent;
         }
-        .sign-btn.active-plus { background-color: var(--plus-green); opacity: 1; }
-        .sign-btn.active-minus { background-color: var(--minus-red); opacity: 1; }
+        .rx-box.active { border-color: var(--accent-blue); }
+        .rx-label { font-size: 10px; color: var(--text-muted); }
+        .rx-val { font-size: 16px; font-weight: bold; font-family: monospace; }
+        .rx-val.minus { color: var(--accent-red); }
+        .rx-val.plus { color: var(--accent-green); }
 
-        /* 計算機排位九宮格 */
-        .numpad-container {
-            padding: 0 15px 15px 15px;
+        /* 表現評價標籤 */
+        .eval-section { margin-top: 20px; }
+        .eval-title { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; }
+        .tag-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .tag {
+            background-color: var(--card-bg); border: 1px solid var(--border);
+            color: var(--text-main); padding: 10px; border-radius: 6px;
+            font-size: 12px; text-align: left;
+        }
+        .tag.active { border-color: var(--accent-red); background-color: #2a1010; }
+
+        /* 評分區塊 (1-5) */
+        .score-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 15px; padding: 5px 0;
+        }
+        .score-label { font-size: 14px; width: 80px; }
+        .score-btns { display: flex; gap: 5px; }
+        .s-btn {
+            width: 32px; height: 32px; border-radius: 16px; border: 1px solid var(--border);
+            background: none; color: var(--text-muted); font-size: 14px;
+        }
+        .s-btn.active { background-color: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        /* 九宮格輸入區 */
+        .numpad-section {
+            background-color: var(--card-bg); padding: 15px; border-top: 1px solid var(--border);
         }
         .numpad-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1.2fr;
-            gap: 8px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px;
         }
-        .num-btn {
-            background-color: var(--btn-bg);
-            color: var(--text-main);
-            border: none;
-            border-radius: 10px;
-            font-size: 24px;
-            font-weight: 500;
-            height: 55px;
+        .btn-n {
+            background-color: #2c2c2e; color: white; border: none; border-radius: 8px;
+            height: 50px; font-size: 20px; font-weight: bold;
         }
-        .num-btn:active { background-color: var(--btn-active); }
-        .num-btn.special {
-            background-color: #323234;
-            color: var(--accent-blue);
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .num-btn.action {
-            background-color: #3a3a3c;
-            font-size: 16px;
-        }
-        .num-btn.next-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-        }
+        .btn-n.blue { color: var(--accent-blue); font-size: 16px; }
+        .btn-n.action { background-color: #3a3a3c; font-size: 14px; }
 
-        /* 臨床問題標記區 */
-        .tags-section {
-            padding: 15px;
-            background-color: var(--card-bg);
-            border-top: 1px solid var(--border-line);
-            flex-grow: 1;
+        /* 底部工具欄 */
+        .footer-tools {
+            padding: 15px; background: #000; border-top: 1px solid var(--border);
+            display: flex; gap: 10px;
         }
-        .section-title {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            font-weight: bold;
+        .tool-btn {
+            flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold;
         }
-        .tags-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .tag-btn {
-            background-color: var(--btn-bg);
-            color: var(--text-main);
-            border: 1px solid #444;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            text-align: left;
-        }
-        .tag-btn.active {
-            background-color: #4a1414; /* 深紅色背景代表選中錯誤 */
-            border-color: var(--minus-red);
-            color: white;
-        }
-        .tag-btn.success {
-            background-color: #143a1a; /* 深綠色背景代表正常 */
-            border-color: var(--plus-green);
-            color: white;
-        }
-
+        .btn-summary { background-color: var(--accent-blue); color: white; }
+        .btn-clear { background-color: #3a3a3c; color: var(--accent-red); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    
-    <div class="nav-section">
-        <div class="tabs-row">
-            <button class="tab-btn active">Student A</button>
-            <button class="tab-btn">Student B</button>
-            <button class="tab-btn">Student C</button>
+    <div class="header-nav">
+        <div class="student-tabs" id="student-tabs">
+            <button class="nav-btn active" onclick="switchStudent(1)">Student 1</button>
+            <button class="nav-btn" onclick="switchStudent(2)">Student 2</button>
+            <button class="nav-btn" onclick="switchStudent(3)">Student 3</button>
+            <button class="nav-btn" onclick="switchStudent(4)">Student 4</button>
         </div>
-        
-        <div class="sub-nav">
-            <div class="toggle-group">
-                <button class="toggle-btn active" id="mode-lens" onclick="switchMode('lensometry')">舊眼鏡度數</button>
-                <button class="toggle-btn" id="mode-ref" onclick="switchMode('refraction')">導師驗眼</button>
+        <div class="patient-tabs" id="patient-tabs">
+            <button class="nav-btn active" onclick="switchPatient(1)">Patient 1</button>
+            <button class="nav-btn" onclick="switchPatient(2)">Patient 2</button>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <div class="eval-title">看診里程碑 (Milestones)</div>
+        <div class="milestone-grid">
+            <button class="m-btn" id="m-start" onclick="toggleMilestone('start')">Case Start <span class="time-display" id="time-start">--:--</span></button>
+            <button class="m-btn" id="m-check" onclick="toggleMilestone('check')">Supervisor Check <span class="time-display" id="time-check">--:--</span></button>
+            <button class="m-btn" id="m-end" onclick="toggleMilestone('end')">Case End <span class="time-display" id="time-end">--:--</span></button>
+        </div>
+
+        <div class="eval-title">關鍵數據參考 (Key Rx Ref)</div>
+        <div class="rx-grid">
+            <div class="rx-box active" id="box-sph" onclick="setActiveField('sph')">
+                <div class="rx-label">SPH</div><div class="rx-val" id="val-sph">0.00</div>
             </div>
-            <div class="toggle-group">
-                <button class="toggle-btn active" id="eye-od" onclick="switchEye('od')">右眼 (OD)</button>
-                <button class="toggle-btn" id="eye-os" onclick="switchEye('os')">左眼 (OS)</button>
+            <div class="rx-box" id="box-cyl" onclick="setActiveField('cyl')">
+                <div class="rx-label">CYL</div><div class="rx-val" id="val-cyl">-0.00</div>
+            </div>
+            <div class="rx-box" id="box-axis" onclick="setActiveField('axis')">
+                <div class="rx-label">AXIS</div><div class="rx-val" id="val-axis">180</div>
+            </div>
+            <div class="rx-box" id="box-add" onclick="setActiveField('add')">
+                <div class="rx-label">ADD</div><div class="rx-val" id="val-add">+0.00</div>
+            </div>
+        </div>
+
+        <div class="eval-section">
+            <div class="score-row">
+                <div class="score-label">Proficiency</div>
+                <div class="score-btns" data-type="prof">
+                    <button class="s-btn" onclick="setScore('prof',1)">1</button>
+                    <button class="s-btn" onclick="setScore('prof',2)">2</button>
+                    <button class="s-btn active" onclick="setScore('prof',3)">3</button>
+                    <button class="s-btn" onclick="setScore('prof',4)">4</button>
+                    <button class="s-btn" onclick="setScore('prof',5)">5</button>
+                </div>
+            </div>
+            <div class="score-row">
+                <div class="score-label">Fluency</div>
+                <div class="score-btns" data-type="fluency">
+                    <button class="s-btn" onclick="setScore('fluency',1)">1</button>
+                    <button class="s-btn" onclick="setScore('fluency',2)">2</button>
+                    <button class="s-btn active" onclick="setScore('fluency',3)">3</button>
+                    <button class="s-btn" onclick="setScore('fluency',4)">4</button>
+                    <button class="s-btn" onclick="setScore('fluency',5)">5</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="eval-section">
+            <div class="eval-title">臨床觀察標籤 (Teaching Tags)</div>
+            <div class="tag-matrix" id="tags-container">
+                <button class="tag" onclick="toggleTag(this)">SPH 偏度數 (Over-minused)</button>
+                <button class="tag" onclick="toggleTag(this)">CYL 軸線誤差 >10度</button>
+                <button class="tag" onclick="toggleTag(this)">舊眼鏡量度不精準</button>
+                <button class="tag" onclick="toggleTag(this)">JCC 操作不正規</button>
+                <button class="tag" onclick="toggleTag(this)">溝通技巧需改善</button>
+                <button class="tag" onclick="toggleTag(this)">漏查眼睛健康特徵</button>
             </div>
         </div>
     </div>
 
-    <div class="display-area">
-        <div class="field-box active" id="box-sph" onclick="setActiveField('sph')">
-            <div class="field-label">SPH</div>
-            <div class="field-value" id="val-sph"></div>
-        </div>
-        <div class="field-box" id="box-cyl" onclick="setActiveField('cyl')">
-            <div class="field-label">CYL</div>
-            <div class="field-value" id="val-cyl"></div>
-        </div>
-        <div class="field-box" id="box-axis" onclick="setActiveField('axis')">
-            <div class="field-label">AXIS</div>
-            <div class="field-value" id="val-axis"></div>
-        </div>
-        <div class="field-box" id="box-add" onclick="setActiveField('add')">
-            <div class="field-label">ADD</div>
-            <div class="field-value" id="val-add"></div>
-        </div>
-    </div>
-
-    <div class="sign-row">
-        <button class="sign-btn" id="btn-plus" onclick="forceSign('+')">＋ (正數)</button>
-        <button class="sign-btn" id="btn-minus" onclick="forceSign('-')">－ (負數)</button>
-    </div>
-
-    <div class="numpad-container">
+    <div class="numpad-section">
         <div class="numpad-grid">
-            <button class="num-btn" onclick="input('7')">7</button>
-            <button class="num-btn" onclick="input('8')">8</button>
-            <button class="num-btn" onclick="input('9')">9</button>
-            <button class="num-btn special" onclick="inputDec('.00')">.00</button>
-
-            <button class="num-btn" onclick="input('4')">4</button>
-            <button class="num-btn" onclick="input('5')">5</button>
-            <button class="num-btn" onclick="input('6')">6</button>
-            <button class="num-btn special" onclick="inputDec('.25')">.25</button>
-
-            <button class="num-btn" onclick="input('1')">1</button>
-            <button class="num-btn" onclick="input('2')">2</button>
-            <button class="num-btn" onclick="input('3')">3</button>
-            <button class="num-btn special" onclick="inputDec('.50')">.50</button>
-
-            <button class="num-btn action" onclick="clearField()">清除</button>
-            <button class="num-btn" onclick="input('0')">0</button>
-            <button class="num-btn next-btn" onclick="nextField()">跳下一格</button>
-            <button class="num-btn special" onclick="inputDec('.75')">.75</button>
+            <button class="btn-n" onclick="numInput('7')">7</button>
+            <button class="btn-n" onclick="numInput('8')">8</button>
+            <button class="btn-n" onclick="numInput('9')">9</button>
+            <button class="btn-n blue" onclick="decInput('.00')">.00</button>
+            <button class="btn-n" onclick="numInput('4')">4</button>
+            <button class="btn-n" onclick="numInput('5')">5</button>
+            <button class="btn-n" onclick="numInput('6')">6</button>
+            <button class="btn-n blue" onclick="decInput('.25')">.25</button>
+            <button class="btn-n" onclick="numInput('1')">1</button>
+            <button class="btn-n" onclick="numInput('2')">2</button>
+            <button class="btn-n" onclick="numInput('3')">3</button>
+            <button class="btn-n blue" onclick="decInput('.50')">.50</button>
+            <button class="btn-n action" onclick="clearRx()">C</button>
+            <button class="btn-n" onclick="numInput('0')">0</button>
+            <button class="btn-n action" onclick="nextField()">Tab</button>
+            <button class="btn-n blue" onclick="decInput('.75')">.75</button>
         </div>
     </div>
 
-    <div class="tags-section">
-        <div class="section-title">學生表現記錄 (Clinical Performance)</div>
-        <div class="tags-grid">
-            <button class="tag-btn success" onclick="this.classList.toggle('active')">度數精準 (Match)</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">SPH 偏向過度矯視</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">CYL 軸線誤差 >10度</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">舊眼鏡量度錯誤</button>
-        </div>
-        
-        <div class="section-title" style="margin-top: 15px;">雙眼協調與健康 (Cover Test & Health)</div>
-        <div class="tags-grid">
-            <button class="tag-btn success" onclick="this.classList.toggle('active')">WNL (正常)</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">異常: 外斜/內斜</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">角膜/前房 異常</button>
-            <button class="tag-btn" onclick="this.classList.toggle('active')">眼底檢查 異常</button>
-        </div>
+    <div class="footer-tools">
+        <button class="tool-btn btn-clear" onclick="resetAll()">清空今日記錄</button>
+        <button class="tool-btn btn-summary" onclick="copySummary()">生成 AI 總結</button>
     </div>
-
 </div>
 
 <script>
-    // 狀態管理：儲存所有項目的數據
-    let state = {
-        mode: 'lensometry', // 'lensometry' 舊眼鏡 或 'refraction' 導師驗眼
-        eye: 'od',          // 'od' 右眼 或 'os' 左眼
-        field: 'sph'        // 目前活躍輸入格
-    };
+    // 數據模型 (4學生 x 2病人)
+    let currentS = 1;
+    let currentP = 1;
+    let activeF = 'sph';
 
-    const fields = ['sph', 'cyl', 'axis', 'add'];
+    let db = JSON.parse(localStorage.getItem('optom_db')) || {};
 
-    // 數據結構庫
-    let appData = {
-        lensometry: {
-            od: { sph: '', cyl: '-', axis: '', add: '+' },
-            os: { sph: '', cyl: '-', axis: '', add: '+' }
-        },
-        refraction: {
-            od: { sph: '', cyl: '-', axis: '', add: '+' },
-            os: { sph: '', cyl: '-', axis: '', add: '+' }
+    function initDb() {
+        for(let s=1; s<=4; s++){
+            if(!db[s]) db[s] = {};
+            for(let p=1; p<=2; p++){
+                if(!db[s][p]) db[s][p] = {
+                    milestones: { start: '', check: '', end: '' },
+                    rx: { sph: '', cyl: '-', axis: '', add: '+' },
+                    scores: { prof: 3, fluency: 3 },
+                    tags: []
+                };
+            }
         }
-    };
+    }
+    initDb();
 
-    // 初始化
-    updateDisplay();
-    updateSignButtons();
+    function saveData() { localStorage.setItem('optom_db', JSON.stringify(db)); }
 
-    // 切換量度項目 (舊眼鏡 / 導師驗眼)
-    function switchMode(newMode) {
-        formatField(state.field);
-        state.mode = newMode;
-        
-        document.getElementById('mode-lens').classList.remove('active');
-        document.getElementById('mode-ref').classList.remove('active');
-        document.getElementById(newMode === 'lensometry' ? 'mode-lens' : 'mode-ref').classList.add('active');
-        
-        setActiveField('sph');
-        updateDisplay();
+    function switchStudent(s) {
+        currentS = s;
+        document.querySelectorAll('#student-tabs .nav-btn').forEach((b,i)=> b.className = (i+1==s)?'nav-btn active':'nav-btn');
+        render();
     }
 
-    // 切換眼睛 (OD / OS)
-    function switchEye(newEye) {
-        formatField(state.field);
-        state.eye = newEye;
-        
-        document.getElementById('eye-od').classList.remove('active');
-        document.getElementById('eye-os').classList.remove('active');
-        document.getElementById(newEye === 'od' ? 'eye-od' : 'eye-os').classList.add('active');
-        
-        setActiveField('sph');
-        updateDisplay();
+    function switchPatient(p) {
+        currentP = p;
+        document.querySelectorAll('#patient-tabs .nav-btn').forEach((b,i)=> b.className = (i+1==p)?'nav-btn active':'nav-btn');
+        render();
     }
 
-    // 獲取當前作用中的數據對象
-    function getCurrentData() {
-        return appData[state.mode][state.eye];
-    }
-
-    // 更新畫面顯示與顏色
-    function updateDisplay() {
-        let currentData = getCurrentData();
-        
-        fields.forEach(f => {
-            let val = currentData[f];
-            let el = document.getElementById('val-' + f);
-            el.innerText = val;
-            
-            // 顏色標示
-            el.className = 'field-value';
-            if (val.includes('-')) el.classList.add('val-minus');
-            if (val.includes('+')) el.classList.add('val-plus');
+    function render() {
+        let data = db[currentS][currentP];
+        // Render Milestones
+        ['start','check','end'].forEach(m => {
+            document.getElementById('time-'+m).innerText = data.milestones[m] || '--:--';
+            document.getElementById('m-'+m).className = data.milestones[m] ? 'm-btn active' : 'm-btn';
+        });
+        // Render Rx
+        ['sph','cyl','axis','add'].forEach(f => {
+            let el = document.getElementById('val-'+f);
+            el.innerText = data.rx[f] || (f=='cyl'?'-':(f=='add'?'+':'0'));
+            el.className = 'rx-val ' + (data.rx[f].includes('-') ? 'minus' : (data.rx[f].includes('+') ? 'plus' : ''));
+        });
+        // Render Scores
+        ['prof','fluency'].forEach(type => {
+            let btns = document.querySelectorAll(`.score-btns[data-type="${type}"] .s-btn`);
+            btns.forEach((b, i) => b.className = (i+1 == data.scores[type]) ? 's-btn active' : 's-btn');
+        });
+        // Render Tags
+        let tagBtns = document.querySelectorAll('.tag');
+        tagBtns.forEach(b => {
+            b.className = data.tags.includes(b.innerText) ? 'tag active' : 'tag';
         });
     }
 
-    // 更新正負號按鈕的亮起狀態
-    function updateSignButtons() {
-        let btnPlus = document.getElementById('btn-plus');
-        let btnMinus = document.getElementById('btn-minus');
-        
-        btnPlus.className = 'sign-btn';
-        btnMinus.className = 'sign-btn';
-
-        if (state.field === 'cyl') {
-            btnMinus.classList.add('active-minus');
-        } else if (state.field === 'add') {
-            btnPlus.classList.add('active-plus');
-        } else if (state.field === 'sph') {
-            btnPlus.classList.add('active-plus');
-            btnMinus.classList.add('active-minus');
-        }
+    function toggleMilestone(m) {
+        let now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        db[currentS][currentP].milestones[m] = db[currentS][currentP].milestones[m] ? '' : now;
+        saveData(); render();
     }
 
-    // 選擇活躍欄位
     function setActiveField(f) {
-        formatField(state.field); 
-        document.getElementById('box-' + state.field).classList.remove('active');
-        state.field = f;
-        document.getElementById('box-' + state.field).classList.add('active');
-        
-        let currentData = getCurrentData();
-        if (state.field === 'cyl' && currentData.cyl === '') currentData.cyl = '-';
-        if (state.field === 'add' && currentData.add === '') currentData.add = '+';
-        
-        updateDisplay();
-        updateSignButtons();
+        activeF = f;
+        document.querySelectorAll('.rx-box').forEach(b => b.classList.remove('active'));
+        document.getElementById('box-'+f).classList.add('active');
     }
 
-    // 強制設定正負號 (SPH 專用)
-    function forceSign(sign) {
-        if (state.field === 'axis') return;
-        if (state.field === 'cyl' && sign === '+') return; 
-        if (state.field === 'add' && sign === '-') return; 
-
-        let currentData = getCurrentData();
-        let val = currentData[state.field];
-        
-        if (val.startsWith('+') || val.startsWith('-')) {
-            currentData[state.field] = sign + val.substring(1);
-        } else {
-            currentData[state.field] = sign + val;
-        }
-        updateDisplay();
+    function numInput(n) {
+        let rx = db[currentS][currentP].rx;
+        if(activeF === 'axis' && rx[activeF].length >= 3) return;
+        rx[activeF] += n;
+        saveData(); render();
     }
 
-    // 輸入數字
-    function input(num) {
-        let currentData = getCurrentData();
-        if (state.field === 'axis' && currentData[state.field].length >= 3) return;
-        currentData[state.field] += num;
-        updateDisplay();
+    function decInput(d) {
+        if(activeF === 'axis') return;
+        let rx = db[currentS][currentP].rx;
+        if(rx[activeF].includes('.')) return;
+        if(rx[activeF] === '' || rx[activeF] === '-' || rx[activeF] === '+') rx[activeF] += '0';
+        rx[activeF] += d;
+        saveData(); render();
     }
 
-    // 輸入小數
-    function inputDec(dec) {
-        let currentData = getCurrentData();
-        if (state.field === 'axis') return;
-        if (currentData[state.field].includes('.')) return; 
-        
-        if (currentData[state.field] === '' || currentData[state.field] === '+' || currentData[state.field] === '-') {
-            currentData[state.field] += '0' + dec;
-        } else {
-            currentData[state.field] += dec;
-        }
-        updateDisplay();
-    }
-
-    // 清除當前欄位
-    function clearField() {
-        let currentData = getCurrentData();
-        if (state.field === 'cyl') {
-            currentData.cyl = '-';
-        } else if (state.field === 'add') {
-            currentData.add = '+';
-        } else {
-            currentData[state.field] = '';
-        }
-        updateDisplay();
-    }
-
-    // 離開欄位時自動補零與格式化
-    function formatField(f) {
-        let currentData = getCurrentData();
-        let val = currentData[f];
-        if (!val || val === '+' || val === '-') return;
-
-        let num = parseFloat(val);
-        if (isNaN(num)) return;
-
-        if (f === 'axis') {
-            if (num > 180) num = num % 180;
-            if (num === 0) num = 180;
-            currentData[f] = num.toString();
-        } else {
-            let formatted = Math.abs(num).toFixed(2);
-            let sign = val.startsWith('-') ? '-' : '+';
-            currentData[f] = sign + formatted;
-        }
-        updateDisplay();
+    function clearRx() {
+        let rx = db[currentS][currentP].rx;
+        rx[activeF] = (activeF=='cyl'?'-':(activeF=='add'?'+':''));
+        saveData(); render();
     }
 
     function nextField() {
-        let currentIndex = fields.indexOf(state.field);
-        let nextIndex = (currentIndex + 1) % fields.length;
-        setActiveField(fields[nextIndex]);
+        const order = ['sph','cyl','axis','add'];
+        setActiveField(order[(order.indexOf(activeF)+1)%4]);
     }
+
+    function setScore(type, s) {
+        db[currentS][currentP].scores[type] = s;
+        saveData(); render();
+    }
+
+    function toggleTag(btn) {
+        let tags = db[currentS][currentP].tags;
+        let txt = btn.innerText;
+        if(tags.includes(txt)) {
+            db[currentS][currentP].tags = tags.filter(t => t !== txt);
+        } else {
+            tags.push(txt);
+        }
+        saveData(); render();
+    }
+
+    function resetAll() {
+        if(confirm("確定清空今日所有學生資料？")) {
+            localStorage.removeItem('optom_db');
+            db = {}; initDb(); render();
+        }
+    }
+
+    function copySummary() {
+        let report = "【Clinical Supervisor AI Report】\n";
+        for(let s=1; s<=4; s++){
+            report += `\nStudent ${s}:\n`;
+            for(let p=1; p<=2; p++){
+                let d = db[s][p];
+                if(d.milestones.start){
+                    report += `  - Patient ${p}: Rx(${d.rx.sph}/${d.rx.cyl}x${d.rx.axis}), Tags:[${d.tags.join(",")}], Scores: P(${d.scores.prof}) F(${d.scores.fluency})\n`;
+                }
+            }
+        }
+        navigator.clipboard.writeText(report);
+        alert("總結已複製到剪貼簿，請貼上給 AI 進行分析。");
+    }
+
+    render();
 </script>
 </body>
 </html>
