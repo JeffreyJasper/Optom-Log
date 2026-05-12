@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Optom Clinical AI Assistant</title>
+    <title>Optom Clinical Assistant V2</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -14,363 +14,201 @@
             --accent-green: #32d74b;
             --accent-red: #ff453a;
             --border: #333333;
-            --btn-active: #48484a;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            user-select: none; touch-action: manipulation;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 0; user-select: none; touch-action: manipulation;
         }
 
-        .app-container {
-            max-width: 500px; margin: 0 auto;
-            min-height: 100vh; display: flex; flex-direction: column;
-        }
+        .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* 雙層標籤導航 */
-        .header-nav {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .student-tabs, .patient-tabs {
-            display: flex; border-bottom: 1px solid var(--border);
-        }
-        .nav-btn {
-            flex: 1; padding: 12px 0; border: none; background: none;
-            color: var(--text-muted); font-size: 14px; font-weight: bold;
-        }
-        .nav-btn.active {
-            color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue);
-        }
-        .patient-tabs { background-color: #121212; }
-        .patient-tabs .nav-btn.active { color: var(--accent-green); border-bottom-color: var(--accent-green); }
+        /* 導航區 */
+        .nav-header { background: var(--card-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+        .tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: bold; }
+        .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
 
-        /* 核心內容區 */
-        .content-body { padding: 15px; flex-grow: 1; }
+        /* 輸入切換 (Lens vs Rx) */
+        .input-toggle { display: flex; padding: 10px; gap: 10px; background: #121212; }
+        .toggle-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; }
+        .toggle-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        /* 臨床里程碑 (計時區) */
-        .milestone-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
-        }
-        .m-btn {
-            background-color: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text-main); padding: 10px 5px;
-            font-size: 12px; text-align: center;
-        }
-        .m-btn.active { background-color: #2c2c2e; border-color: var(--accent-blue); }
-        .time-display { font-size: 10px; color: var(--accent-blue); display: block; margin-top: 4px; }
-
-        /* 數據快速輸入 (Rx Reference) */
-        .rx-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;
-        }
-        .rx-box {
-            background-color: var(--card-bg); border-radius: 8px; padding: 8px;
-            text-align: center; border: 2px solid transparent;
-        }
+        /* 度數顯示區 */
+        .rx-display { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; }
+        .rx-box { background: var(--card-bg); border-radius: 8px; padding: 8px 2px; text-align: center; border: 2px solid transparent; }
         .rx-box.active { border-color: var(--accent-blue); }
-        .rx-label { font-size: 10px; color: var(--text-muted); }
-        .rx-val { font-size: 16px; font-weight: bold; font-family: monospace; }
-        .rx-val.minus { color: var(--accent-red); }
-        .rx-val.plus { color: var(--accent-green); }
+        .rx-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+        .rx-val { font-size: 18px; font-weight: bold; font-family: monospace; }
+        .val-minus { color: var(--accent-red); }
+        .val-plus { color: var(--accent-green); }
 
-        /* 表現評價標籤 */
-        .eval-section { margin-top: 20px; }
-        .eval-title { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; }
-        .tag-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .tag {
-            background-color: var(--card-bg); border: 1px solid var(--border);
-            color: var(--text-main); padding: 10px; border-radius: 6px;
-            font-size: 12px; text-align: left;
-        }
-        .tag.active { border-color: var(--accent-red); background-color: #2a1010; }
-
-        /* 評分區塊 (1-5) */
-        .score-row {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 15px; padding: 5px 0;
-        }
-        .score-label { font-size: 14px; width: 80px; }
-        .score-btns { display: flex; gap: 5px; }
-        .s-btn {
-            width: 32px; height: 32px; border-radius: 16px; border: 1px solid var(--border);
-            background: none; color: var(--text-muted); font-size: 14px;
-        }
-        .s-btn.active { background-color: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-
-        /* 九宮格輸入區 */
-        .numpad-section {
-            background-color: var(--card-bg); padding: 15px; border-top: 1px solid var(--border);
-        }
-        .numpad-grid {
-            display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px;
-        }
-        .btn-n {
-            background-color: #2c2c2e; color: white; border: none; border-radius: 8px;
-            height: 50px; font-size: 20px; font-weight: bold;
-        }
+        /* 九宮格鍵盤 - 緊貼在輸入區下方 */
+        .numpad-container { padding: 5px 10px 15px 10px; background: #000; }
+        .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
+        .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
+        .btn-n:active { background: #48484a; }
         .btn-n.blue { color: var(--accent-blue); font-size: 16px; }
-        .btn-n.action { background-color: #3a3a3c; font-size: 14px; }
+        .btn-n.action { background: #3a3a3c; font-size: 14px; }
+        .btn-n.sign { color: var(--accent-green); font-size: 24px; }
 
-        /* 底部工具欄 */
-        .footer-tools {
-            padding: 15px; background: #000; border-top: 1px solid var(--border);
-            display: flex; gap: 10px;
-        }
-        .tool-btn {
-            flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold;
-        }
-        .btn-summary { background-color: var(--accent-blue); color: white; }
-        .btn-clear { background-color: #3a3a3c; color: var(--accent-red); }
+        /* 標籤分類區 - 捲軸式 */
+        .tags-container { padding: 10px; flex-grow: 1; }
+        .tag-group { margin-bottom: 15px; }
+        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; }
+        .tag.active { border-color: var(--accent-red); background: #2a1010; }
+
+        /* 底部評分與評語 */
+        .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); }
+        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .score-label { font-size: 13px; font-weight: bold; }
+        .score-btns { display: flex; gap: 4px; }
+        .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: none; color: var(--text-muted); font-size: 12px; }
+        .s-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; }
+
+        .action-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .act-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; }
+        .btn-sum { background: var(--accent-blue); color: white; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header-nav">
-        <div class="student-tabs" id="student-tabs">
-            <button class="nav-btn active" onclick="switchStudent(1)">Student 1</button>
-            <button class="nav-btn" onclick="switchStudent(2)">Student 2</button>
-            <button class="nav-btn" onclick="switchStudent(3)">Student 3</button>
-            <button class="nav-btn" onclick="switchStudent(4)">Student 4</button>
+    <div class="nav-header">
+        <div class="tabs" id="student-tabs">
+            <button class="tab-btn active" onclick="switchS(1)">S1</button>
+            <button class="tab-btn" onclick="switchS(2)">S2</button>
+            <button class="tab-btn" onclick="switchS(3)">S3</button>
+            <button class="tab-btn" onclick="switchS(4)">S4</button>
         </div>
-        <div class="patient-tabs" id="patient-tabs">
-            <button class="nav-btn active" onclick="switchPatient(1)">Patient 1</button>
-            <button class="nav-btn" onclick="switchPatient(2)">Patient 2</button>
+        <div class="tabs" id="patient-tabs">
+            <button class="tab-btn active" onclick="switchP(1)">P1</button>
+            <button class="tab-btn" onclick="switchP(2)">P2</button>
+            <button class="tab-btn" onclick="switchEye('OD')">OD (右)</button>
+            <button class="tab-btn" onclick="switchEye('OS')">OS (左)</button>
         </div>
-    </div>
-
-    <div class="content-body">
-        <div class="eval-title">看診里程碑 (Milestones)</div>
-        <div class="milestone-grid">
-            <button class="m-btn" id="m-start" onclick="toggleMilestone('start')">Case Start <span class="time-display" id="time-start">--:--</span></button>
-            <button class="m-btn" id="m-check" onclick="toggleMilestone('check')">Supervisor Check <span class="time-display" id="time-check">--:--</span></button>
-            <button class="m-btn" id="m-end" onclick="toggleMilestone('end')">Case End <span class="time-display" id="time-end">--:--</span></button>
-        </div>
-
-        <div class="eval-title">關鍵數據參考 (Key Rx Ref)</div>
-        <div class="rx-grid">
-            <div class="rx-box active" id="box-sph" onclick="setActiveField('sph')">
-                <div class="rx-label">SPH</div><div class="rx-val" id="val-sph">0.00</div>
-            </div>
-            <div class="rx-box" id="box-cyl" onclick="setActiveField('cyl')">
-                <div class="rx-label">CYL</div><div class="rx-val" id="val-cyl">-0.00</div>
-            </div>
-            <div class="rx-box" id="box-axis" onclick="setActiveField('axis')">
-                <div class="rx-label">AXIS</div><div class="rx-val" id="val-axis">180</div>
-            </div>
-            <div class="rx-box" id="box-add" onclick="setActiveField('add')">
-                <div class="rx-label">ADD</div><div class="rx-val" id="val-add">+0.00</div>
-            </div>
-        </div>
-
-        <div class="eval-section">
-            <div class="score-row">
-                <div class="score-label">Proficiency</div>
-                <div class="score-btns" data-type="prof">
-                    <button class="s-btn" onclick="setScore('prof',1)">1</button>
-                    <button class="s-btn" onclick="setScore('prof',2)">2</button>
-                    <button class="s-btn active" onclick="setScore('prof',3)">3</button>
-                    <button class="s-btn" onclick="setScore('prof',4)">4</button>
-                    <button class="s-btn" onclick="setScore('prof',5)">5</button>
-                </div>
-            </div>
-            <div class="score-row">
-                <div class="score-label">Fluency</div>
-                <div class="score-btns" data-type="fluency">
-                    <button class="s-btn" onclick="setScore('fluency',1)">1</button>
-                    <button class="s-btn" onclick="setScore('fluency',2)">2</button>
-                    <button class="s-btn active" onclick="setScore('fluency',3)">3</button>
-                    <button class="s-btn" onclick="setScore('fluency',4)">4</button>
-                    <button class="s-btn" onclick="setScore('fluency',5)">5</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="eval-section">
-            <div class="eval-title">臨床觀察標籤 (Teaching Tags)</div>
-            <div class="tag-matrix" id="tags-container">
-                <button class="tag" onclick="toggleTag(this)">SPH 偏度數 (Over-minused)</button>
-                <button class="tag" onclick="toggleTag(this)">CYL 軸線誤差 >10度</button>
-                <button class="tag" onclick="toggleTag(this)">舊眼鏡量度不精準</button>
-                <button class="tag" onclick="toggleTag(this)">JCC 操作不正規</button>
-                <button class="tag" onclick="toggleTag(this)">溝通技巧需改善</button>
-                <button class="tag" onclick="toggleTag(this)">漏查眼睛健康特徵</button>
-            </div>
+        <div class="input-toggle">
+            <button class="toggle-btn active" id="mode-lens" onclick="setMode('lens')">病人眼鏡 (Lens)</button>
+            <button class="toggle-btn" id="mode-rx" onclick="setMode('rx')">導師驗眼 (Rx)</button>
         </div>
     </div>
 
-    <div class="numpad-section">
+    <div class="rx-display">
+        <div class="rx-box active" id="box-sph" onclick="setF('sph')"><div class="rx-label">SPH</div><div class="rx-val" id="v-sph">+0.00</div></div>
+        <div class="rx-box" id="box-cyl" onclick="setF('cyl')"><div class="rx-label">CYL</div><div class="rx-val" id="v-cyl">-0.00</div></div>
+        <div class="rx-box" id="box-axis" onclick="setF('axis')"><div class="rx-label">AXIS</div><div class="rx-val" id="v-axis">180</div></div>
+        <div class="rx-box" id="box-add" onclick="setF('add')"><div class="rx-label">ADD</div><div class="rx-val" id="v-add">+0.00</div></div>
+    </div>
+
+    <div class="numpad-container">
         <div class="numpad-grid">
-            <button class="btn-n" onclick="numInput('7')">7</button>
-            <button class="btn-n" onclick="numInput('8')">8</button>
-            <button class="btn-n" onclick="numInput('9')">9</button>
-            <button class="btn-n blue" onclick="decInput('.00')">.00</button>
-            <button class="btn-n" onclick="numInput('4')">4</button>
-            <button class="btn-n" onclick="numInput('5')">5</button>
-            <button class="btn-n" onclick="numInput('6')">6</button>
-            <button class="btn-n blue" onclick="decInput('.25')">.25</button>
-            <button class="btn-n" onclick="numInput('1')">1</button>
-            <button class="btn-n" onclick="numInput('2')">2</button>
-            <button class="btn-n" onclick="numInput('3')">3</button>
-            <button class="btn-n blue" onclick="decInput('.50')">.50</button>
-            <button class="btn-n action" onclick="clearRx()">C</button>
-            <button class="btn-n" onclick="numInput('0')">0</button>
-            <button class="btn-n action" onclick="nextField()">Tab</button>
-            <button class="btn-n blue" onclick="decInput('.75')">.75</button>
+            <button class="btn-n" onclick="k('7')">7</button><button class="btn-n" onclick="k('8')">8</button><button class="btn-n" onclick="k('9')">9</button><button class="btn-n blue" onclick="d('.00')">.00</button>
+            <button class="btn-n" onclick="k('4')">4</button><button class="btn-n" onclick="k('5')">5</button><button class="btn-n" onclick="k('6')">6</button><button class="btn-n blue" onclick="d('.25')">.25</button>
+            <button class="btn-n" onclick="k('1')">1</button><button class="btn-n" onclick="k('2')">2</button><button class="btn-n" onclick="k('3')">3</button><button class="btn-n blue" onclick="d('.50')">.50</button>
+            <button class="btn-n sign" onclick="toggleSign()">+/-</button><button class="btn-n" onclick="k('0')">0</button><button class="btn-n action" onclick="clearF()">C</button><button class="btn-n blue" onclick="d('.75')">.75</button>
         </div>
     </div>
 
-    <div class="footer-tools">
-        <button class="tool-btn btn-clear" onclick="resetAll()">清空今日記錄</button>
-        <button class="tool-btn btn-summary" onclick="copySummary()">生成 AI 總結</button>
+    <div class="tags-container">
+        <div class="tag-group"><div class="group-title">Hx Taking</div><div class="tag-grid" id="tags-hx"></div></div>
+        <div class="tag-group"><div class="group-title">Preliminary Test</div><div class="tag-grid" id="tags-pre"></div></div>
+        <div class="tag-group"><div class="group-title">Refraction</div><div class="tag-grid" id="tags-ref"></div></div>
+        <div class="tag-group"><div class="group-title">EOH</div><div class="tag-grid" id="tags-eoh"></div></div>
+        <div class="tag-group"><div class="group-title">IOH</div><div class="tag-grid" id="tags-ioh"></div></div>
+    </div>
+
+    <div class="footer-section">
+        <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="s-prof"></div></div>
+        <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="s-fluency"></div></div>
+        <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="s-accuracy"></div></div>
+        <textarea id="others-txt" placeholder="Others: 手打意見或點擊語音輸入..."></textarea>
+        <div class="action-btns">
+            <button class="act-btn btn-sum" onclick="getSummary()">生成 AI 總結</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // 數據模型 (4學生 x 2病人)
-    let currentS = 1;
-    let currentP = 1;
-    let activeF = 'sph';
+    let curS = 1, curP = 1, curE = 'OD', curM = 'lens', curF = 'sph';
+    const tagList = {
+        hx: ['主訴不明確', '漏問病歷', '藥物史不詳'],
+        pre: ['CT 判斷錯誤', 'NPC 量度不準', '漏查瞳孔反應'],
+        ref: ['SPH 過度矯視', 'CYL 軸線 >10度', 'JCC 操作錯誤', '未做平衡檢查'],
+        eoh: ['漏看角膜異物', '淚膜評估不準', '眼瞼檢查遺漏'],
+        ioh: ['C/D Ratio 誤判', '漏看黃斑特徵', '周邊視網膜未查']
+    };
 
-    let db = JSON.parse(localStorage.getItem('optom_db')) || {};
+    let db = JSON.parse(localStorage.getItem('optom_v2')) || {};
+    function init() {
+        for(let s=1;s<=4;s++) { if(!db[s]) db[s]={}; for(let p=1;p<=2;p++) { if(!db[s][p]) db[s][p]={ lens:{OD:resetRx(),OS:resetRx()}, rx:{OD:resetRx(),OS:resetRx()}, tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' }; } }
+        renderTags(); renderScores(); render();
+    }
+    function resetRx() { return {sph:'+0.00',cyl:'-0.00',axis:'180',add:'+0.00'}; }
+    function save() { localStorage.setItem('optom_v2', JSON.stringify(db)); }
 
-    function initDb() {
-        for(let s=1; s<=4; s++){
-            if(!db[s]) db[s] = {};
-            for(let p=1; p<=2; p++){
-                if(!db[s][p]) db[s][p] = {
-                    milestones: { start: '', check: '', end: '' },
-                    rx: { sph: '', cyl: '-', axis: '', add: '+' },
-                    scores: { prof: 3, fluency: 3 },
-                    tags: []
-                };
-            }
+    function renderTags() {
+        for(let cat in tagList) {
+            document.getElementById('tags-'+cat).innerHTML = tagList[cat].map(t => `<button class="tag" onclick="tglTag('${t}')">${t}</button>`).join('');
         }
     }
-    initDb();
-
-    function saveData() { localStorage.setItem('optom_db', JSON.stringify(db)); }
-
-    function switchStudent(s) {
-        currentS = s;
-        document.querySelectorAll('#student-tabs .nav-btn').forEach((b,i)=> b.className = (i+1==s)?'nav-btn active':'nav-btn');
-        render();
-    }
-
-    function switchPatient(p) {
-        currentP = p;
-        document.querySelectorAll('#patient-tabs .nav-btn').forEach((b,i)=> b.className = (i+1==p)?'nav-btn active':'nav-btn');
-        render();
+    function renderScores() {
+        ['prof','fluency','accuracy'].forEach(id => {
+            document.getElementById('s-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setS('${id}',${n})">${n}</button>`).join('');
+        });
     }
 
     function render() {
-        let data = db[currentS][currentP];
-        // Render Milestones
-        ['start','check','end'].forEach(m => {
-            document.getElementById('time-'+m).innerText = data.milestones[m] || '--:--';
-            document.getElementById('m-'+m).className = data.milestones[m] ? 'm-btn active' : 'm-btn';
-        });
-        // Render Rx
+        let d = db[curS][curP];
+        let rx = d[curM][curE];
         ['sph','cyl','axis','add'].forEach(f => {
-            let el = document.getElementById('val-'+f);
-            el.innerText = data.rx[f] || (f=='cyl'?'-':(f=='add'?'+':'0'));
-            el.className = 'rx-val ' + (data.rx[f].includes('-') ? 'minus' : (data.rx[f].includes('+') ? 'plus' : ''));
+            let el = document.getElementById('v-'+f); el.innerText = rx[f];
+            el.className = 'rx-val ' + (rx[f].includes('-') ? 'val-minus' : (rx[f].includes('+') ? 'val-plus' : ''));
         });
-        // Render Scores
-        ['prof','fluency'].forEach(type => {
-            let btns = document.querySelectorAll(`.score-btns[data-type="${type}"] .s-btn`);
-            btns.forEach((b, i) => b.className = (i+1 == data.scores[type]) ? 's-btn active' : 's-btn');
+        document.querySelectorAll('.tag').forEach(b => b.classList.toggle('active', d.tags.includes(b.innerText)));
+        ['prof','fluency','accuracy'].forEach(id => {
+            document.querySelectorAll(`#s-${id} .s-btn`).forEach((b,i) => b.classList.toggle('active', i+1==d.scores[id]));
         });
-        // Render Tags
-        let tagBtns = document.querySelectorAll('.tag');
-        tagBtns.forEach(b => {
-            b.className = data.tags.includes(b.innerText) ? 'tag active' : 'tag';
-        });
+        document.getElementById('others-txt').value = d.note;
     }
 
-    function toggleMilestone(m) {
-        let now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        db[currentS][currentP].milestones[m] = db[currentS][currentP].milestones[m] ? '' : now;
-        saveData(); render();
-    }
+    function switchS(s) { curS=s; updateNav('student-tabs',s-1); render(); }
+    function switchP(p) { curP=p; updateNav('patient-tabs',p-1); render(); }
+    function switchEye(e) { curE=e; updateNav('patient-tabs', e=='OD'?2:3); render(); }
+    function setMode(m) { curM=m; document.getElementById('mode-lens').classList.toggle('active', m=='lens'); document.getElementById('mode-rx').classList.toggle('active', m=='rx'); render(); }
+    function updateNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i) => b.classList.toggle('active', i==idx)); }
 
-    function setActiveField(f) {
-        activeF = f;
-        document.querySelectorAll('.rx-box').forEach(b => b.classList.remove('active'));
-        document.getElementById('box-'+f).classList.add('active');
+    function setF(f) { curF=f; document.querySelectorAll('.rx-box').forEach(b => b.classList.toggle('active', b.id=='box-'+f)); }
+    function k(n) { let rx = db[curS][curP][curM][curE]; if(curF=='axis' && rx[curF].length>=3) return; rx[curF]+=n; save(); render(); }
+    function d(v) { let rx = db[curS][curP][curM][curE]; if(curF=='axis' || rx[curF].includes('.')) return; rx[curF]+=v; save(); render(); }
+    function toggleSign() {
+        if(curF=='axis') return;
+        let rx = db[curS][curP][curM][curE];
+        rx[curF] = rx[curF].startsWith('-') ? '+'+rx[curF].substring(1) : '-'+(rx[curF].startsWith('+')?rx[curF].substring(1):rx[curF]);
+        save(); render();
     }
+    function clearF() { db[curS][curP][curM][curE][curF] = (curF=='cyl'?'-':(curF=='axis'?'':'+')); save(); render(); }
+    function tglTag(t) { let ts = db[curS][curP].tags; if(ts.includes(t)) db[curS][curP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
+    function setS(id, n) { db[curS][curP].scores[id]=n; save(); render(); }
+    document.getElementById('others-txt').oninput = (e) => { db[curS][curP].note = e.target.value; save(); };
 
-    function numInput(n) {
-        let rx = db[currentS][currentP].rx;
-        if(activeF === 'axis' && rx[activeF].length >= 3) return;
-        rx[activeF] += n;
-        saveData(); render();
-    }
-
-    function decInput(d) {
-        if(activeF === 'axis') return;
-        let rx = db[currentS][currentP].rx;
-        if(rx[activeF].includes('.')) return;
-        if(rx[activeF] === '' || rx[activeF] === '-' || rx[activeF] === '+') rx[activeF] += '0';
-        rx[activeF] += d;
-        saveData(); render();
-    }
-
-    function clearRx() {
-        let rx = db[currentS][currentP].rx;
-        rx[activeF] = (activeF=='cyl'?'-':(activeF=='add'?'+':''));
-        saveData(); render();
-    }
-
-    function nextField() {
-        const order = ['sph','cyl','axis','add'];
-        setActiveField(order[(order.indexOf(activeF)+1)%4]);
-    }
-
-    function setScore(type, s) {
-        db[currentS][currentP].scores[type] = s;
-        saveData(); render();
-    }
-
-    function toggleTag(btn) {
-        let tags = db[currentS][currentP].tags;
-        let txt = btn.innerText;
-        if(tags.includes(txt)) {
-            db[currentS][currentP].tags = tags.filter(t => t !== txt);
-        } else {
-            tags.push(txt);
-        }
-        saveData(); render();
-    }
-
-    function resetAll() {
-        if(confirm("確定清空今日所有學生資料？")) {
-            localStorage.removeItem('optom_db');
-            db = {}; initDb(); render();
-        }
-    }
-
-    function copySummary() {
-        let report = "【Clinical Supervisor AI Report】\n";
-        for(let s=1; s<=4; s++){
-            report += `\nStudent ${s}:\n`;
-            for(let p=1; p<=2; p++){
+    function getSummary() {
+        let r = "Clinical Log V2:\n";
+        for(let s=1;s<=4;s++) {
+            r += `S${s}: `;
+            for(let p=1;p<=2;p++) {
                 let d = db[s][p];
-                if(d.milestones.start){
-                    report += `  - Patient ${p}: Rx(${d.rx.sph}/${d.rx.cyl}x${d.rx.axis}), Tags:[${d.tags.join(",")}], Scores: P(${d.scores.prof}) F(${d.scores.fluency})\n`;
-                }
+                r += `P${p}[Lens OD:${d.lens.OD.sph}, Rx OD:${d.rx.OD.sph}, Tags:${d.tags.join('/')}, Score:${d.scores.accuracy}], `;
             }
+            r += "\n";
         }
-        navigator.clipboard.writeText(report);
-        alert("總結已複製到剪貼簿，請貼上給 AI 進行分析。");
+        navigator.clipboard.writeText(r); alert("已複製總結，請貼上給 AI。");
     }
-
-    render();
+    init();
 </script>
 </body>
 </html>
