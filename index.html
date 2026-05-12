@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Optom Clinical Assistant V3</title>
+    <title>Optom Clinical Assistant V4</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -25,7 +25,7 @@
 
         .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* 三層導航區 */
+        /* 導航區 */
         .nav-header { background: var(--card-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
         .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: bold; }
@@ -35,56 +35,59 @@
         .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold;}
         .m-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        /* 雙行度數顯示區 (R / L) */
+        /* 病人基本資料與計時區 */
+        .info-timer-section { padding: 10px; background: #121212; border-bottom: 1px solid var(--border); }
+        .patient-info { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .info-input { background: #000; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; flex: 1; font-size: 14px; }
+        .gender-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+        .gender-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
+        .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
+        .t-lbl { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+        .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
+        .dur-display { font-size: 11px; color: var(--accent-blue); margin-top: 4px; display: block; font-weight: bold; }
+
+        /* 度數顯示矩陣 (R / L) */
         .rx-matrix { padding: 10px; background: var(--bg-color); }
         .rx-header { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 4px; }
         .rx-header div { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; }
-        
         .rx-row { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 8px; align-items: center; }
         .eye-lbl { font-size: 16px; font-weight: bold; color: var(--text-muted); text-align: center; }
-        .rx-cell { 
-            background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; 
-            height: 44px; display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: bold; font-family: monospace; color: var(--text-main);
-        }
+        .rx-cell { background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; font-family: monospace; color: var(--text-main); }
         .rx-cell.active { border-color: var(--accent-blue); background: var(--cell-active); }
         .val-minus { color: var(--accent-red); }
         .val-plus { color: var(--accent-green); }
 
         /* 九宮格鍵盤 */
-        .numpad { padding: 0 10px 15px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
+        .numpad { padding: 0 10px 10px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
         .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n:active { background: #48484a; }
-        .btn-n.dec { color: var(--accent-blue); font-size: 18px; font-weight: bold; background: #1c1c1e; border: 1px solid #333;}
+        .btn-n.dec { color: var(--accent-blue); font-size: 18px; font-weight: bold; }
         .btn-n.action { background: #3a3a3c; font-size: 16px; }
         .btn-n.sign { color: var(--accent-green); font-size: 22px; }
 
-        /* 分類標籤區 */
-        .tags-container { padding: 15px; flex-grow: 1; background: var(--bg-color); }
-        .tag-group { margin-bottom: 18px; }
-        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;}
-        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 8px; border-radius: 6px; font-size: 12px; text-align: left; line-height: 1.3;}
+        /* 標籤與評分區 */
+        .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
+        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
+        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; }
         .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
 
-        /* 底部評分與意見區 */
-        .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); }
-        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .score-label { font-size: 13px; font-weight: bold; width: 80px;}
-        .score-btns { display: flex; gap: 6px; }
-        .s-btn { width: 32px; height: 32px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 13px; font-weight: bold;}
+        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .score-btns { display: flex; gap: 4px; }
+        .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 12px; }
         .s-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        textarea { width: 100%; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: white; padding: 12px; font-size: 14px; margin-top: 5px; box-sizing: border-box; min-height: 80px;}
-
+        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; min-height: 80px;}
         .btn-sum { width: 100%; background: var(--accent-blue); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px;}
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    
     <div class="nav-header">
         <div class="tabs" id="nav-s">
             <button class="tab-btn active" onclick="setS(1)">Student 1</button>
@@ -97,14 +100,39 @@
             <button class="tab-btn" onclick="setP(2)">Patient 2</button>
         </div>
         <div class="mode-toggle">
-            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">舊眼鏡度數</button>
-            <button class="m-btn" id="btn-rx" onclick="setM('rx')">導師驗眼紀錄</button>
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">舊眼鏡 (Lens)</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">導師驗眼 (Rx)</button>
+        </div>
+    </div>
+
+    <div class="info-timer-section">
+        <div class="patient-info">
+            <input type="number" id="p-age" class="info-input" placeholder="年齡 (Age)" oninput="updateInfo()">
+            <button class="gender-btn" id="g-M" onclick="setGender('M')">M (男)</button>
+            <button class="gender-btn" id="g-F" onclick="setGender('F')">F (女)</button>
+        </div>
+        <div class="timer-grid">
+            <div class="t-btn" id="t-start" onclick="logTime('start')">
+                <span class="t-lbl">A: Case Start</span>
+                <span class="t-val" id="v-start">--:--</span>
+            </div>
+            <div class="t-btn" id="t-check" onclick="logTime('check')">
+                <span class="t-lbl">B: Supervisor Check</span>
+                <span class="t-val" id="v-check">--:--</span>
+            </div>
+            <div class="t-btn" id="t-end" onclick="logTime('end')">
+                <span class="t-lbl">C: Case End</span>
+                <span class="t-val" id="v-end">--:--</span>
+            </div>
+        </div>
+        <div id="durations" style="margin-top: 8px; display: flex; justify-content: space-between;">
+            <span class="dur-display" id="dur-student">Student Time: --</span>
+            <span class="dur-display" id="dur-total">Total Time: --</span>
         </div>
     </div>
 
     <div class="rx-matrix">
         <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
-        
         <div class="rx-row">
             <div class="eye-lbl">R</div>
             <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
@@ -112,7 +140,6 @@
             <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
             <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
         </div>
-        
         <div class="rx-row">
             <div class="eye-lbl">L</div>
             <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
@@ -126,174 +153,106 @@
         <div class="numpad-grid">
             <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
             <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
-            <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
-            <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C (清)</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
+            <button class="btn-n" onclick="k1('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
+            <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
         </div>
     </div>
 
-    <div class="tags-container">
-        <div class="tag-group"><div class="group-title">Hx Taking</div><div class="tag-grid" id="tg-hx"></div></div>
-        <div class="tag-group"><div class="group-title">Preliminary Test</div><div class="tag-grid" id="tg-pre"></div></div>
-        <div class="tag-group"><div class="group-title">Refraction</div><div class="tag-grid" id="tg-ref"></div></div>
-        <div class="tag-group"><div class="group-title">EOH</div><div class="tag-grid" id="tg-eoh"></div></div>
-        <div class="tag-group"><div class="group-title">IOH</div><div class="tag-grid" id="tg-ioh"></div></div>
+    <div class="scroll-area">
+        <div class="tag-group"><div class="group-title">Performance Tags</div><div class="tag-grid" id="tg-main"></div></div>
+        <div class="footer-section">
+            <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
+            <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
+            <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
+            <textarea id="txt-note" placeholder="Others..."></textarea>
+            <button class="btn-sum" onclick="genSum()">複製 AI 總結摘要</button>
+        </div>
     </div>
-
-    <div class="footer-section">
-        <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
-        <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
-        <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
-        
-        <div style="margin-top: 15px; font-size: 13px; font-weight: bold; color: var(--accent-blue);">Others / 教學評語</div>
-        <textarea id="txt-note" placeholder="可點擊鍵盤麥克風用語音輸入..."></textarea>
-        
-        <button class="btn-sum" onclick="genSum()">複製 AI 總結摘要</button>
-    </div>
-
 </div>
 
 <script>
-    // 狀態變數
-    let cS = 1, cP = 1, cM = 'lens'; 
-    let activeEye = 'OD', activeFld = 'sph';
-    
-    // 標籤資料庫
-    const tagsDB = {
-        hx: ['Chief Complaint 不清', '漏問病歷/家族史', '藥物史不詳'],
-        pre: ['Cover Test 判斷錯', 'NPC 量度不準', '漏查瞳孔反應', 'EOM 檢查不完整'],
-        ref: ['SPH 過度矯視 (-)', 'CYL 軸線 >10度誤差', 'JCC 操作錯誤', '未做雙眼平衡', '舊眼鏡量度錯'],
-        eoh: ['漏看角膜異物/SPK', '淚膜評估不準確', '眼瞼/睫毛檢查遺漏', '前房深度評估錯'],
-        ioh: ['C/D Ratio 誤判', '漏看黃斑特徵', '未檢查周邊視網膜', '血管比例評估錯']
-    };
-
-    let db = JSON.parse(localStorage.getItem('optom_v3')) || {};
-
-    // 基礎狀態設定 (SPH:+, CYL:-, AXIS:'', ADD:+)
-    function getBase(f) { return f==='cyl'?'-':(f==='axis'?'':'+'); }
+    let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
+    const tagList = ['SPH 過度矯視', 'CYL 軸線誤差', 'Chief Complaint 不清', 'CT 判斷錯', 'JCC 操作錯', '漏看眼底特徵'];
+    let db = JSON.parse(localStorage.getItem('optom_v4')) || {};
 
     function init() {
-        for(let s=1; s<=4; s++) { 
-            if(!db[s]) db[s]={}; 
-            for(let p=1; p<=2; p++) { 
-                if(!db[s][p]) db[s][p] = { 
-                    lens: {OD:{sph:'+',cyl:'-',axis:'',add:'+'}, OS:{sph:'+',cyl:'-',axis:'',add:'+'}}, 
-                    rx: {OD:{sph:'+',cyl:'-',axis:'',add:'+'}, OS:{sph:'+',cyl:'-',axis:'',add:'+'}}, 
-                    tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' 
-                }; 
-            } 
-        }
-        renderTags(); renderScores(); render();
+        for(let s=1;s<=4;s++) { if(!db[s]) db[s]={}; for(let p=1;p<=2;p++) { if(!db[s][p]) db[s][p]={ age:'', gender:'', times:{start:null,check:null,end:null}, lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' }; } }
+        document.getElementById('tg-main').innerHTML = tagList.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
+        ['prof','fluency','accuracy'].forEach(id => document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join(''));
+        render();
     }
-    function save() { localStorage.setItem('optom_v3', JSON.stringify(db)); }
+    function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
+    function save() { localStorage.setItem('optom_v4', JSON.stringify(db)); }
 
-    // 渲染靜態 HTML
-    function renderTags() {
-        for(let cat in tagsDB) {
-            document.getElementById('tg-'+cat).innerHTML = tagsDB[cat].map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
-        }
-    }
-    function renderScores() {
-        ['prof','fluency','accuracy'].forEach(id => {
-            document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join('');
-        });
-    }
-
-    // 更新畫面數據
     function render() {
         let d = db[cS][cP];
-        let rxData = d[cM];
+        document.getElementById('p-age').value = d.age;
+        document.getElementById('g-M').className = 'gender-btn ' + (d.gender=='M'?'active':'');
+        document.getElementById('g-F').className = 'gender-btn ' + (d.gender=='F'?'active':'');
         
-        ['OD','OS'].forEach(eye => {
-            ['sph','cyl','axis','add'].forEach(f => {
-                let cell = document.getElementById(`c-${eye}-${f}`);
-                let val = rxData[eye][f];
-                cell.innerText = val;
-                
-                // 顏色處理
-                cell.classList.remove('val-minus', 'val-plus');
-                if(val.length > 1 || f === 'axis') { 
-                    if(val.includes('-')) cell.classList.add('val-minus');
-                    if(val.includes('+')) cell.classList.add('val-plus');
-                }
-            });
+        ['start','check','end'].forEach(k => {
+            let timeStr = d.times[k] ? new Date(d.times[k]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '--:--';
+            document.getElementById('v-'+k).innerText = timeStr;
+            document.getElementById('t-'+k).className = 't-btn ' + (d.times[k]?'active':'');
         });
+        updateDurations();
 
-        // 更新標籤、分數、文字
+        let rx = d[cM];
+        ['OD','OS'].forEach(e => ['sph','cyl','axis','add'].forEach(f => {
+            let el = document.getElementById(`c-${e}-${f}`); el.innerText = rx[e][f];
+            el.className = 'rx-cell ' + (e==aE && f==aF?'active ':'') + (rx[e][f].includes('-')?'val-minus':'val-plus');
+        }));
         document.querySelectorAll('.tag').forEach(b => b.classList.toggle('active', d.tags.includes(b.innerText)));
-        ['prof','fluency','accuracy'].forEach(id => {
-            document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i) => b.classList.toggle('active', i+1==d.scores[id]));
-        });
+        ['prof','fluency','accuracy'].forEach(id => document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i)=>b.classList.toggle('active', i+1==d.scores[id])));
         document.getElementById('txt-note').value = d.note;
     }
 
-    // 導航切換
-    function setS(s) { cS=s; updNav('nav-s', s-1); render(); }
-    function setP(p) { cP=p; updNav('nav-p', p-1); render(); }
-    function updNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i) => b.classList.toggle('active', i==idx)); }
-    function setM(m) { 
-        cM = m; 
-        document.getElementById('btn-lens').classList.toggle('active', m==='lens'); 
-        document.getElementById('btn-rx').classList.toggle('active', m==='rx'); 
-        render(); 
+    function logTime(k) { db[cS][cP].times[k] = db[cS][cP].times[k] ? null : new Date().toISOString(); save(); render(); }
+    
+    function updateDurations() {
+        let t = db[cS][cP].times;
+        if(t.start && t.check) {
+            let diff = Math.floor((new Date(t.check) - new Date(t.start)) / 60000);
+            document.getElementById('dur-student').innerText = `Student Time: ${diff} mins`;
+        } else document.getElementById('dur-student').innerText = 'Student Time: --';
+        
+        if(t.start && t.end) {
+            let diff = Math.floor((new Date(t.end) - new Date(t.start)) / 60000);
+            document.getElementById('dur-total').innerText = `Total Time: ${diff} mins`;
+        } else document.getElementById('dur-total').innerText = 'Total Time: --';
     }
 
-    // 設定活躍輸入格
-    function setF(eye, fld) {
-        activeEye = eye; activeFld = fld;
-        document.querySelectorAll('.rx-cell').forEach(c => c.classList.remove('active'));
-        document.getElementById(`c-${eye}-${fld}`).classList.add('active');
-    }
-
-    // 鍵盤輸入邏輯
-    function inN(n) { 
-        let v = db[cS][cP][cM][activeEye][activeFld]; 
-        if(activeFld==='axis' && v.length>=3) return; 
-        db[cS][cP][cM][activeEye][activeFld] += n; 
-        save(); render(); 
-    }
-    function inD(d) { 
-        let v = db[cS][cP][cM][activeEye][activeFld]; 
-        if(activeFld==='axis' || v.includes('.')) return; 
-        if(v === '+' || v === '-' || v === '') {
-            db[cS][cP][cM][activeEye][activeFld] += '0' + d; 
-        } else {
-            db[cS][cP][cM][activeEye][activeFld] += d;
-        }
-        save(); render(); 
-    }
-    function tglSign() {
-        if(activeFld !== 'sph') return; // 只允許 SPH 切換正負
-        let v = db[cS][cP][cM][activeEye][activeFld];
-        if(v.startsWith('+')) db[cS][cP][cM][activeEye][activeFld] = '-' + v.substring(1);
-        else if(v.startsWith('-')) db[cS][cP][cM][activeEye][activeFld] = '+' + v.substring(1);
-        else db[cS][cP][cM][activeEye][activeFld] = '-';
-        save(); render();
-    }
-    function clr() { 
-        db[cS][cP][cM][activeEye][activeFld] = getBase(activeFld); 
-        save(); render(); 
-    }
-
-    // 標籤與評分邏輯
+    function updateInfo() { db[cS][cP].age = document.getElementById('p-age').value; save(); }
+    function setGender(g) { db[cS][cP].gender = db[cS][cP].gender == g ? '' : g; save(); render(); }
+    function setS(s) { cS=s; updNav('nav-s',s-1); render(); }
+    function setP(p) { cP=p; updNav('nav-p',p-1); render(); }
+    function updNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i)=>b.classList.toggle('active', i==idx)); }
+    function setM(m) { cM=m; document.getElementById('btn-lens').classList.toggle('active',m=='lens'); document.getElementById('btn-rx').classList.toggle('active',m=='rx'); render(); }
+    function setF(e,f) { aE=e; aF=f; render(); }
+    function inN(n) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' && v.length>=3) return; db[cS][cP][cM][aE][aF] += n; save(); render(); }
+    function k1(n) { inN(n); }
+    function inD(d) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' || v.includes('.')) return; db[cS][cP][cM][aE][aF] += (v=='+'||v=='-'?'0':'')+d; save(); render(); }
+    function tglSign() { if(aF!='sph') return; let v = db[cS][cP][cM][aE][aF]; db[cS][cP][cM][aE][aF] = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); save(); render(); }
+    function clr() { db[cS][cP][cM][aE][aF] = aF=='cyl'?'-':(aF=='axis'?'':'+'); save(); render(); }
     function tglT(t) { let ts = db[cS][cP].tags; if(ts.includes(t)) db[cS][cP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
-    function setSc(id, n) { db[cS][cP].scores[id]=n; save(); render(); }
+    function setSc(id,n) { db[cS][cP].scores[id]=n; save(); render(); }
     document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
 
-    // 匯出摘要
     function genSum() {
-        let r = "Clinical Log V3:\n";
-        for(let s=1; s<=4; s++) {
+        let r = "Clinical Log Report:\n";
+        for(let s=1;s<=4;s++){
             r += `\nStudent ${s}:\n`;
-            for(let p=1; p<=2; p++) {
+            for(let p=1;p<=2;p++){
                 let d = db[s][p];
-                if(d.tags.length > 0 || d.note !== '') {
-                    r += `  Patient ${p}:\n    Rx_R: ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis}\n    Rx_L: ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n    Tags: [${d.tags.join(', ')}]\n    Scores: P(${d.scores.prof}) F(${d.scores.fluency}) A(${d.scores.accuracy})\n    Notes: ${d.note}\n`;
+                if(d.times.start){
+                    let st = d.times.start && d.times.check ? Math.floor((new Date(d.times.check)-new Date(d.times.start))/60000) : '--';
+                    let tt = d.times.start && d.times.end ? Math.floor((new Date(d.times.end)-new Date(d.times.start))/60000) : '--';
+                    r += `  P${p} (${d.age}${d.gender}): Time[Total:${tt}m, Stud:${st}m], Tags:[${d.tags.join(', ')}], Notes:${d.note}\n`;
                 }
             }
         }
-        navigator.clipboard.writeText(r); alert("已複製總結摘要，請貼上給 AI 進行分析。");
+        navigator.clipboard.writeText(r); alert("已複製。");
     }
-
     init();
 </script>
 </body>
