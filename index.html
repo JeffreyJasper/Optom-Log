@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry</title>
+    <title>Clinical Supervisor Log - Optometry V6</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -17,12 +17,7 @@
             --cell-active: #1a2a3a;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 0; user-select: none; touch-action: manipulation;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
         /* Navigation Header */
@@ -30,7 +25,6 @@
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
         .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: bold; }
         .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background: #121212; }
-        
         .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
         .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold;}
         .m-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
@@ -41,7 +35,6 @@
         .info-input { background: #000; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; flex: 1; font-size: 14px; }
         .gender-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
         .gender-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-
         .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
         .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
@@ -49,7 +42,7 @@
         .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
         .dur-display { font-size: 10px; color: var(--accent-blue); margin-top: 4px; display: block; font-weight: bold; }
 
-        /* Rx Matrix (R / L) */
+        /* Rx Matrix */
         .rx-matrix { padding: 10px; background: var(--bg-color); }
         .rx-header { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 4px; }
         .rx-header div { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; }
@@ -69,10 +62,12 @@
         .btn-n.action { background: #3a3a3c; font-size: 14px; }
         .btn-n.sign { color: var(--accent-green); font-size: 22px; }
 
-        /* Scroll Area */
+        /* Scroll Area & Dynamic Tag Grid */
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
         .group-title { font-size: 11px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
-        .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        
+        /* 標籤排版優化：自適應網格，允許容納更多標籤而不浪費空間 */
+        .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
         .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; line-height: 1.2;}
         .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
 
@@ -115,18 +110,9 @@
             <button class="gender-btn" id="g-F" onclick="setGender('F')">F</button>
         </div>
         <div class="timer-grid">
-            <div class="t-btn" id="t-start" onclick="logTime('start')">
-                <span class="t-lbl">Case Start</span>
-                <span class="t-val" id="v-start">--:--</span>
-            </div>
-            <div class="t-btn" id="t-check" onclick="logTime('check')">
-                <span class="t-lbl">Sup. Check</span>
-                <span class="t-val" id="v-check">--:--</span>
-            </div>
-            <div class="t-btn" id="t-end" onclick="logTime('end')">
-                <span class="t-lbl">Discharge</span>
-                <span class="t-val" id="v-end">--:--</span>
-            </div>
+            <div class="t-btn" id="t-start" onclick="logTime('start')"><span class="t-lbl">Case Start</span><span class="t-val" id="v-start">--:--</span></div>
+            <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Sup. Check</span><span class="t-val" id="v-check">--:--</span></div>
+            <div class="t-btn" id="t-end" onclick="logTime('end')"><span class="t-lbl">Discharge</span><span class="t-val" id="v-end">--:--</span></div>
         </div>
         <div id="durations" style="margin-top: 8px; display: flex; justify-content: space-between;">
             <span class="dur-display" id="dur-student">Stud. Time: --</span>
@@ -162,7 +148,7 @@
     </div>
 
     <div class="scroll-area">
-        <div class="tag-group"><div class="group-title">Clinical Observation Tags</div><div class="tag-grid" id="tg-main"></div></div>
+        <div id="tags-container-main"></div>
         
         <div class="footer-section">
             <div class="group-title">Performance Grading (1-5)</div>
@@ -180,12 +166,35 @@
 
 <script>
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
-    const tagList = [
-        'SPH Over-minused', 'CYL Axis Deviation (>10°)', 'Vague Chief Complaint', 
-        'Incorrect CT Diagnosis', 'JCC Procedure Error', 'Missed Fundus Findings', 
-        'Lensometry Inaccuracy', 'Incomplete Case History'
-    ];
-    let db = JSON.parse(localStorage.getItem('optom_v5')) || {};
+    
+    // ==========================================
+    // 擴充版臨床標籤資料庫 (可隨時自行新增/修改字串)
+    // ==========================================
+    const tagsDB = {
+        'Hx Taking': [
+            'Vague Chief Complaint', 'Missed Ocular Hx', 'Missed Systemic Hx', 
+            'Medications not recorded', 'Poor Questioning Flow'
+        ],
+        'Preliminary Test': [
+            'VA: Incorrect Protocol', 'CT: Direction/Magnitude Error', 
+            'NPC: Poor Target Control', 'Pupils: Missed APD', 'EOM: Incomplete Range'
+        ],
+        'Refraction': [
+            'Lensometry Inaccuracy', 'SPH: Over-minused', 'SPH: Over-plused', 
+            'CYL: Axis Error >10°', 'CYL: Power Error >0.50D', 'JCC: Procedural Error', 
+            'Binocular Balance Omitted', 'Endpoint Lacks Clarity'
+        ],
+        'Anterior Segment (EOH)': [
+            'Lids/Lashes: Missed Pathology', 'Cornea: Missed Staining/SPK', 
+            'Tear Film: Missed TBUT', 'AC Angle: Grading Error', 'IOP: Goldmann Technique Issue'
+        ],
+        'Posterior Segment (IOH)': [
+            'Lens: Cataract Grading Error', 'Optic Nerve: C/D Ratio Error', 
+            'Macula: Missed Pathology', 'Vessels: A/V Crossing Missed', 'Peripheral Retina Omitted'
+        ]
+    };
+
+    let db = JSON.parse(localStorage.getItem('optom_v6')) || {};
 
     function init() {
         for(let s=1;s<=4;s++) { 
@@ -198,14 +207,23 @@
                 }; 
             } 
         }
-        document.getElementById('tg-main').innerHTML = tagList.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
+        
+        // Render Tags from DB
+        let tagsHtml = '';
+        for (const [category, tags] of Object.entries(tagsDB)) {
+            tagsHtml += `<div class="tag-group"><div class="group-title">${category}</div><div class="tag-grid">`;
+            tagsHtml += tags.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
+            tagsHtml += `</div></div>`;
+        }
+        document.getElementById('tags-container-main').innerHTML = tagsHtml;
+
         ['prelim','comm','prof','fluency','accuracy'].forEach(id => {
             document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join('');
         });
         render();
     }
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v5', JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v6', JSON.stringify(db)); }
 
     function render() {
         let d = db[cS][cP];
