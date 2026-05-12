@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Optom Clinical Assistant V4</title>
+    <title>Clinical Supervisor Log - Optometry</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -25,17 +25,17 @@
 
         .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* 導航區 */
+        /* Navigation Header */
         .nav-header { background: var(--card-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: bold; }
+        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: bold; }
         .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background: #121212; }
         
         .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
-        .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold;}
+        .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold;}
         .m-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
-        /* 病人基本資料與計時區 */
+        /* Patient Info & Timer */
         .info-timer-section { padding: 10px; background: #121212; border-bottom: 1px solid var(--border); }
         .patient-info { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .info-input { background: #000; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; flex: 1; font-size: 14px; }
@@ -45,11 +45,11 @@
         .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
         .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
-        .t-lbl { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+        .t-lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; display: block; text-transform: uppercase;}
         .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
-        .dur-display { font-size: 11px; color: var(--accent-blue); margin-top: 4px; display: block; font-weight: bold; }
+        .dur-display { font-size: 10px; color: var(--accent-blue); margin-top: 4px; display: block; font-weight: bold; }
 
-        /* 度數顯示矩陣 (R / L) */
+        /* Rx Matrix (R / L) */
         .rx-matrix { padding: 10px; background: var(--bg-color); }
         .rx-header { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 4px; }
         .rx-header div { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; }
@@ -60,29 +60,32 @@
         .val-minus { color: var(--accent-red); }
         .val-plus { color: var(--accent-green); }
 
-        /* 九宮格鍵盤 */
+        /* Numpad */
         .numpad { padding: 0 10px 10px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
         .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n:active { background: #48484a; }
         .btn-n.dec { color: var(--accent-blue); font-size: 18px; font-weight: bold; }
-        .btn-n.action { background: #3a3a3c; font-size: 16px; }
+        .btn-n.action { background: #3a3a3c; font-size: 14px; }
         .btn-n.sign { color: var(--accent-green); font-size: 22px; }
 
-        /* 標籤與評分區 */
+        /* Scroll Area */
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
-        .group-title { font-size: 12px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
+        .group-title { font-size: 11px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
         .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; }
+        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; line-height: 1.2;}
         .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
 
-        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        /* Scoring & Comments */
+        .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); margin-bottom: 40px; }
+        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .score-label { font-size: 12px; font-weight: bold; color: var(--text-main); }
         .score-btns { display: flex; gap: 4px; }
         .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 12px; }
         .s-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
         textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; min-height: 80px;}
-        .btn-sum { width: 100%; background: var(--accent-blue); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px;}
+        .btn-sum { width: 100%; background: var(--accent-blue); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px; text-transform: uppercase;}
     </style>
 </head>
 <body>
@@ -100,33 +103,33 @@
             <button class="tab-btn" onclick="setP(2)">Patient 2</button>
         </div>
         <div class="mode-toggle">
-            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">舊眼鏡 (Lens)</button>
-            <button class="m-btn" id="btn-rx" onclick="setM('rx')">導師驗眼 (Rx)</button>
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry (Habitual)</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Refraction</button>
         </div>
     </div>
 
     <div class="info-timer-section">
         <div class="patient-info">
-            <input type="number" id="p-age" class="info-input" placeholder="年齡 (Age)" oninput="updateInfo()">
-            <button class="gender-btn" id="g-M" onclick="setGender('M')">M (男)</button>
-            <button class="gender-btn" id="g-F" onclick="setGender('F')">F (女)</button>
+            <input type="number" id="p-age" class="info-input" placeholder="Age" oninput="updateInfo()">
+            <button class="gender-btn" id="g-M" onclick="setGender('M')">M</button>
+            <button class="gender-btn" id="g-F" onclick="setGender('F')">F</button>
         </div>
         <div class="timer-grid">
             <div class="t-btn" id="t-start" onclick="logTime('start')">
-                <span class="t-lbl">A: Case Start</span>
+                <span class="t-lbl">Case Start</span>
                 <span class="t-val" id="v-start">--:--</span>
             </div>
             <div class="t-btn" id="t-check" onclick="logTime('check')">
-                <span class="t-lbl">B: Supervisor Check</span>
+                <span class="t-lbl">Sup. Check</span>
                 <span class="t-val" id="v-check">--:--</span>
             </div>
             <div class="t-btn" id="t-end" onclick="logTime('end')">
-                <span class="t-lbl">C: Case End</span>
+                <span class="t-lbl">Discharge</span>
                 <span class="t-val" id="v-end">--:--</span>
             </div>
         </div>
         <div id="durations" style="margin-top: 8px; display: flex; justify-content: space-between;">
-            <span class="dur-display" id="dur-student">Student Time: --</span>
+            <span class="dur-display" id="dur-student">Stud. Time: --</span>
             <span class="dur-display" id="dur-total">Total Time: --</span>
         </div>
     </div>
@@ -134,14 +137,14 @@
     <div class="rx-matrix">
         <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
         <div class="rx-row">
-            <div class="eye-lbl">R</div>
+            <div class="eye-lbl">OD</div>
             <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
             <div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div>
             <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
             <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
         </div>
         <div class="rx-row">
-            <div class="eye-lbl">L</div>
+            <div class="eye-lbl">OS</div>
             <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
             <div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div>
             <div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div>
@@ -153,36 +156,56 @@
         <div class="numpad-grid">
             <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
             <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
-            <button class="btn-n" onclick="k1('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
+            <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
             <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
         </div>
     </div>
 
     <div class="scroll-area">
-        <div class="tag-group"><div class="group-title">Performance Tags</div><div class="tag-grid" id="tg-main"></div></div>
+        <div class="tag-group"><div class="group-title">Clinical Observation Tags</div><div class="tag-grid" id="tg-main"></div></div>
+        
         <div class="footer-section">
+            <div class="group-title">Performance Grading (1-5)</div>
+            <div class="score-row"><div class="score-label">Preliminary Test</div><div class="score-btns" id="sc-prelim"></div></div>
+            <div class="score-row"><div class="score-label">Communication</div><div class="score-btns" id="sc-comm"></div></div>
             <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
             <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
             <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
-            <textarea id="txt-note" placeholder="Others..."></textarea>
-            <button class="btn-sum" onclick="genSum()">複製 AI 總結摘要</button>
+            
+            <textarea id="txt-note" placeholder="Additional observations / comments..."></textarea>
+            <button class="btn-sum" onclick="genSum()">Copy AI Summary Report</button>
         </div>
     </div>
 </div>
 
 <script>
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
-    const tagList = ['SPH 過度矯視', 'CYL 軸線誤差', 'Chief Complaint 不清', 'CT 判斷錯', 'JCC 操作錯', '漏看眼底特徵'];
-    let db = JSON.parse(localStorage.getItem('optom_v4')) || {};
+    const tagList = [
+        'SPH Over-minused', 'CYL Axis Deviation (>10°)', 'Vague Chief Complaint', 
+        'Incorrect CT Diagnosis', 'JCC Procedure Error', 'Missed Fundus Findings', 
+        'Lensometry Inaccuracy', 'Incomplete Case History'
+    ];
+    let db = JSON.parse(localStorage.getItem('optom_v5')) || {};
 
     function init() {
-        for(let s=1;s<=4;s++) { if(!db[s]) db[s]={}; for(let p=1;p<=2;p++) { if(!db[s][p]) db[s][p]={ age:'', gender:'', times:{start:null,check:null,end:null}, lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, tags:[], scores:{prof:3,fluency:3,accuracy:3}, note:'' }; } }
+        for(let s=1;s<=4;s++) { 
+            if(!db[s]) db[s]={}; 
+            for(let p=1;p<=2;p++) { 
+                if(!db[s][p]) db[s][p]={ 
+                    age:'', gender:'', times:{start:null,check:null,end:null}, 
+                    lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, 
+                    tags:[], scores:{prelim:3, comm:3, prof:3, fluency:3, accuracy:3}, note:'' 
+                }; 
+            } 
+        }
         document.getElementById('tg-main').innerHTML = tagList.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
-        ['prof','fluency','accuracy'].forEach(id => document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join(''));
+        ['prelim','comm','prof','fluency','accuracy'].forEach(id => {
+            document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join('');
+        });
         render();
     }
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v4', JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v5', JSON.stringify(db)); }
 
     function render() {
         let d = db[cS][cP];
@@ -203,7 +226,9 @@
             el.className = 'rx-cell ' + (e==aE && f==aF?'active ':'') + (rx[e][f].includes('-')?'val-minus':'val-plus');
         }));
         document.querySelectorAll('.tag').forEach(b => b.classList.toggle('active', d.tags.includes(b.innerText)));
-        ['prof','fluency','accuracy'].forEach(id => document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i)=>b.classList.toggle('active', i+1==d.scores[id])));
+        ['prelim','comm','prof','fluency','accuracy'].forEach(id => {
+            document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i)=>b.classList.toggle('active', i+1==d.scores[id]));
+        });
         document.getElementById('txt-note').value = d.note;
     }
 
@@ -213,12 +238,12 @@
         let t = db[cS][cP].times;
         if(t.start && t.check) {
             let diff = Math.floor((new Date(t.check) - new Date(t.start)) / 60000);
-            document.getElementById('dur-student').innerText = `Student Time: ${diff} mins`;
-        } else document.getElementById('dur-student').innerText = 'Student Time: --';
+            document.getElementById('dur-student').innerText = `Stud. Time: ${diff}m`;
+        } else document.getElementById('dur-student').innerText = 'Stud. Time: --';
         
         if(t.start && t.end) {
             let diff = Math.floor((new Date(t.end) - new Date(t.start)) / 60000);
-            document.getElementById('dur-total').innerText = `Total Time: ${diff} mins`;
+            document.getElementById('dur-total').innerText = `Total Time: ${diff}m`;
         } else document.getElementById('dur-total').innerText = 'Total Time: --';
     }
 
@@ -230,7 +255,6 @@
     function setM(m) { cM=m; document.getElementById('btn-lens').classList.toggle('active',m=='lens'); document.getElementById('btn-rx').classList.toggle('active',m=='rx'); render(); }
     function setF(e,f) { aE=e; aF=f; render(); }
     function inN(n) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' && v.length>=3) return; db[cS][cP][cM][aE][aF] += n; save(); render(); }
-    function k1(n) { inN(n); }
     function inD(d) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' || v.includes('.')) return; db[cS][cP][cM][aE][aF] += (v=='+'||v=='-'?'0':'')+d; save(); render(); }
     function tglSign() { if(aF!='sph') return; let v = db[cS][cP][cM][aE][aF]; db[cS][cP][cM][aE][aF] = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); save(); render(); }
     function clr() { db[cS][cP][cM][aE][aF] = aF=='cyl'?'-':(aF=='axis'?'':'+'); save(); render(); }
@@ -239,19 +263,24 @@
     document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
 
     function genSum() {
-        let r = "Clinical Log Report:\n";
+        let r = "=== Clinical Supervision Summary Report ===\n";
         for(let s=1;s<=4;s++){
-            r += `\nStudent ${s}:\n`;
+            r += `\n[Student ${s}]\n`;
             for(let p=1;p<=2;p++){
                 let d = db[s][p];
                 if(d.times.start){
                     let st = d.times.start && d.times.check ? Math.floor((new Date(d.times.check)-new Date(d.times.start))/60000) : '--';
                     let tt = d.times.start && d.times.end ? Math.floor((new Date(d.times.end)-new Date(d.times.start))/60000) : '--';
-                    r += `  P${p} (${d.age}${d.gender}): Time[Total:${tt}m, Stud:${st}m], Tags:[${d.tags.join(', ')}], Notes:${d.note}\n`;
+                    r += `  Patient ${p} (${d.age || '?'}${d.gender || '?'}):\n`;
+                    r += `    Time: Total ${tt}m, Stud. ${st}m\n`;
+                    r += `    Rx OD: ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis}, OS: ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
+                    r += `    Grading: Prelim(${d.scores.prelim}), Comm(${d.scores.comm}), Prof(${d.scores.prof}), Fluen(${d.scores.fluency}), Accu(${d.scores.accuracy})\n`;
+                    r += `    Tags: ${d.tags.join(', ') || 'None'}\n`;
+                    r += `    Comments: ${d.note || 'None'}\n`;
                 }
             }
         }
-        navigator.clipboard.writeText(r); alert("已複製。");
+        navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
     }
     init();
 </script>
