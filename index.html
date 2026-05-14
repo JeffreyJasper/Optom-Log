@@ -66,7 +66,7 @@
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
         .group-title { font-size: 11px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
         
-        /* 標籤排版優化：自適應網格，允許容納更多標籤而不浪費空間 */
+        /* 標籤排版優化：自適應網格 */
         .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
         .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; line-height: 1.2;}
         .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
@@ -159,10 +159,30 @@
             <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
             
             <textarea id="txt-note" placeholder="Additional observations / comments..."></textarea>
+            
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-    <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary Report</button>
-    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="resetAll()">Reset All</button>
-</div>
+                <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary Report</button>
+                <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="showResetZone()">Reset All</button>
+            </div>
+
+            <div id="reset-zone" style="display: none; margin-top: 15px; padding: 15px; background: #2a1010; border: 1px solid var(--accent-red); border-radius: 8px;">
+                <div style="font-size: 13px; font-weight: bold; color: var(--accent-red); margin-bottom: 12px;">確認重置 (請勾選以下三項解鎖)：</div>
+                
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 1. 我明白這將永久刪除所有紀錄
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 2. 這個 clinical log 真的好好用
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 13px; color: white;">
+                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 3. 我有常懷感恩的心，多謝 JP
+                </label>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-confirm-reset" class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: #888;" disabled onclick="executeReset()">確定清空</button>
+                    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #333333; color: white;" onclick="hideResetZone()">取消</button>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -304,31 +324,42 @@
         }
         navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
     }
-        function resetAll() {
-        // 第一關：標準確認警告
-        let passA = confirm("警告 (WARNING):\n這將永久刪除手機內所有學生與病人的紀錄。\n\n確定要重置並清空資料嗎？\n(Are you sure you want to reset all data?)");
-        if (!passA) return;
 
-        // 第二關：好用確認
-        let passB = prompt("請回答安全問題 (1/2)：\n這個clinical log 好唔好用？");
-        // 使用 trim() 去除前後可能不小心打到的空白
-        if (passB === null || passB.trim() !== "好用") {
-            alert("密碼錯誤！重置程序已終止。");
-            return;
+    // ==========================================
+    // Tick Box 解鎖重置機制
+    // ==========================================
+    function showResetZone() {
+        document.getElementById('reset-zone').style.display = 'block';
+        document.querySelectorAll('.reset-chk').forEach(chk => chk.checked = false);
+        checkReset(); 
+    }
+
+    function hideResetZone() {
+        document.getElementById('reset-zone').style.display = 'none';
+    }
+
+    function checkReset() {
+        let chks = document.querySelectorAll('.reset-chk');
+        let allChecked = Array.from(chks).every(chk => chk.checked);
+        let btn = document.getElementById('btn-confirm-reset');
+        
+        if (allChecked) {
+            btn.disabled = false;
+            btn.style.background = 'var(--accent-red)';
+            btn.style.color = 'white';
+        } else {
+            btn.disabled = true;
+            btn.style.background = '#3a3a3c';
+            btn.style.color = '#888';
         }
+    }
 
-        // 第三關：終極感恩密碼
-        let passC = prompt("請回答安全問題 (2/2)：\n常懷感恩的心，有沒有多謝JP?");
-        if (passC === null || passC.trim() !== "有多謝JP") {
-            alert("密碼錯誤！請常懷感恩的心，重置程序已終止。");
-            return;
-        }
-
-        // 答對所有問題，執行重置
+    function executeReset() {
         localStorage.removeItem('optom_v6');
         db = {};
-        init(); // 重新初始化資料結構和畫面
-        alert("資料已安全清空。(All data has been reset.)\n謝謝 JP！");
+        init();
+        hideResetZone();
+        alert("資料已安全清空。\n謝謝 JP！");
     }
 
     init();
