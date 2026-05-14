@@ -159,7 +159,11 @@
             <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
             
             <textarea id="txt-note" placeholder="Additional observations / comments..."></textarea>
-            <button class="btn-sum" onclick="genSum()">Copy AI Summary Report</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+    <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary Report</button>
+    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="resetAll()">Reset All</button>
+</div>
+
         </div>
     </div>
 </div>
@@ -300,6 +304,33 @@
         }
         navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
     }
+        function resetAll() {
+        // 第一關：標準確認警告
+        let passA = confirm("警告 (WARNING):\n這將永久刪除手機內所有學生與病人的紀錄。\n\n確定要重置並清空資料嗎？\n(Are you sure you want to reset all data?)");
+        if (!passA) return;
+
+        // 第二關：好用確認
+        let passB = prompt("請回答安全問題 (1/2)：\n這個clinical log 好唔好用？");
+        // 使用 trim() 去除前後可能不小心打到的空白
+        if (passB === null || passB.trim() !== "好用") {
+            alert("密碼錯誤！重置程序已終止。");
+            return;
+        }
+
+        // 第三關：終極感恩密碼
+        let passC = prompt("請回答安全問題 (2/2)：\n常懷感恩的心，有沒有多謝JP?");
+        if (passC === null || passC.trim() !== "有多謝JP") {
+            alert("密碼錯誤！請常懷感恩的心，重置程序已終止。");
+            return;
+        }
+
+        // 答對所有問題，執行重置
+        localStorage.removeItem('optom_v6');
+        db = {};
+        init(); // 重新初始化資料結構和畫面
+        alert("資料已安全清空。(All data has been reset.)\n謝謝 JP！");
+    }
+
     init();
 </script>
 </body>
