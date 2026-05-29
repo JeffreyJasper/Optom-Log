@@ -3,44 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V6</title>
+    <title>Clinical Supervisor Log - Optometry V10</title>
     <style>
         :root {
             --bg-color: #000000;
             --card-bg: #1c1c1e;
             --text-main: #ffffff;
             --text-muted: #8e8e93;
-            --accent-blue: #0a84ff;
-            --accent-green: #32d74b;
             --accent-red: #ff453a;
+            --fixed-green: #32d74b;
             --border: #333333;
             --cell-active: #1a2a3a;
+            
+            --theme-color: #0a84ff;
+            --theme-dark: #002b5e;
         }
 
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
+        body[data-student="1"] { --theme-color: #0a84ff; --theme-dark: #002b5e; }
+        body[data-student="2"] { --theme-color: #32d74b; --theme-dark: #0a3814; }
+        body[data-student="3"] { --theme-color: #bf5af2; --theme-dark: #32004f; }
+        body[data-student="4"] { --theme-color: #ff9f0a; --theme-dark: #4d2e00; }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; user-select: none; touch-action: manipulation; transition: background-color 0.3s; }
         .app-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
 
         /* Navigation Header */
         .nav-header { background: var(--card-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: bold; }
-        .tab-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background: #121212; }
+        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: bold; transition: color 0.3s; }
+        .tab-btn.active { color: var(--theme-color); border-bottom: 3px solid var(--theme-color); background: #121212; }
+        
+        /* Secondary Navigation (Patient) */
+        .patient-tabs { display: flex; padding: 10px; background: #000; gap: 10px; justify-content: center; }
+        .p-btn { flex: 1; padding: 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold; }
+        .p-btn.active { background: #333; color: white; border-color: #555; }
+
+        /* Dynamic Status Banner */
+        .status-banner { background: var(--theme-dark); color: white; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; border-bottom: 1px solid var(--theme-color); transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .edit-icon { font-size: 16px; cursor: pointer; padding: 2px 5px; background: rgba(0,0,0,0.3); border-radius: 4px; }
+
         .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
         .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold;}
-        .m-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .m-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
 
         /* Patient Info & Timer */
         .info-timer-section { padding: 10px; background: #121212; border-bottom: 1px solid var(--border); }
-        .patient-info { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .patient-info { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
         .info-input { background: #000; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; flex: 1; font-size: 14px; }
         .gender-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
-        .gender-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-        .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .gender-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
+        
+        .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
         .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
         .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
         .t-lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; display: block; text-transform: uppercase;}
         .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
-        .dur-display { font-size: 10px; color: var(--accent-blue); margin-top: 4px; display: block; font-weight: bold; }
+        .dur-display { font-size: 10px; color: var(--theme-color); margin-top: 4px; display: block; font-weight: bold; }
+
+        /* No Show Button */
+        .btn-noshow { width: 100%; padding: 10px; background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        .btn-noshow.active { background: #3a1515; color: var(--accent-red); border-color: var(--accent-red); }
 
         /* Rx Matrix */
         .rx-matrix { padding: 10px; background: var(--bg-color); }
@@ -49,27 +71,28 @@
         .rx-row { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 8px; align-items: center; }
         .eye-lbl { font-size: 16px; font-weight: bold; color: var(--text-muted); text-align: center; }
         .rx-cell { background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; font-family: monospace; color: var(--text-main); }
-        .rx-cell.active { border-color: var(--accent-blue); background: var(--cell-active); }
+        .rx-cell.active { border-color: var(--theme-color); background: var(--cell-active); }
         .val-minus { color: var(--accent-red); }
-        .val-plus { color: var(--accent-green); }
+        .val-plus { color: var(--fixed-green); }
 
         /* Numpad */
         .numpad { padding: 0 10px 10px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
         .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n:active { background: #48484a; }
-        .btn-n.dec { color: var(--accent-blue); font-size: 18px; font-weight: bold; }
+        .btn-n.dec { color: var(--theme-color); font-size: 18px; font-weight: bold; }
         .btn-n.action { background: #3a3a3c; font-size: 14px; }
-        .btn-n.sign { color: var(--accent-green); font-size: 22px; }
+        .btn-n.sign { color: var(--fixed-green); font-size: 22px; }
 
         /* Scroll Area & Dynamic Tag Grid */
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
-        .group-title { font-size: 11px; color: var(--accent-blue); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
-        
-        /* 標籤排版優化：自適應網格 */
+        .group-title { font-size: 11px; color: var(--theme-color); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
         .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
         .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; line-height: 1.2;}
-        .tag.active { border-color: var(--accent-red); background: #3a1515; color: white; }
+        .tag.active { border-color: var(--theme-color); background: var(--theme-dark); color: white; }
+        .group-title-redflag { color: var(--accent-red); }
+        .tag-redflag { border-color: #8b0000; color: #ff6b6b; }
+        .tag-redflag.active { background: #ff0000; color: #ffffff; border-color: #ff0000; font-weight: bold; }
 
         /* Scoring & Comments */
         .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); margin-bottom: 40px; }
@@ -77,29 +100,34 @@
         .score-label { font-size: 12px; font-weight: bold; color: var(--text-main); }
         .score-btns { display: flex; gap: 4px; }
         .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 12px; }
-        .s-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .s-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
 
-        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; min-height: 80px;}
-        .btn-sum { width: 100%; background: var(--accent-blue); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px; text-transform: uppercase;}
+        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; }
+        .btn-sum { width: 100%; background: var(--theme-color); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px; text-transform: uppercase;}
     </style>
 </head>
-<body>
+<body data-student="1">
 
 <div class="app-container">
     <div class="nav-header">
         <div class="tabs" id="nav-s">
-            <button class="tab-btn active" onclick="setS(1)">Student 1</button>
-            <button class="tab-btn" onclick="setS(2)">Student 2</button>
-            <button class="tab-btn" onclick="setS(3)">Student 3</button>
-            <button class="tab-btn" onclick="setS(4)">Student 4</button>
+            <button class="tab-btn active" id="tab-s1" onclick="setS(1)">👨‍⚕️ S 1</button>
+            <button class="tab-btn" id="tab-s2" onclick="setS(2)">👨‍⚕️ S 2</button>
+            <button class="tab-btn" id="tab-s3" onclick="setS(3)">👨‍⚕️ S 3</button>
+            <button class="tab-btn" id="tab-s4" onclick="setS(4)" style="display:none;">👨‍⚕️ S 4</button>
+            <button class="tab-btn" id="btn-add-s" onclick="addS4()" style="flex: 0.4; font-size: 18px;">➕</button>
         </div>
-        <div class="tabs" id="nav-p">
-            <button class="tab-btn active" onclick="setP(1)">Patient 1</button>
-            <button class="tab-btn" onclick="setP(2)">Patient 2</button>
+        <div class="patient-tabs" id="nav-p">
+            <button class="p-btn active" onclick="setP(1)">🗂️ Patient 1</button>
+            <button class="p-btn" onclick="setP(2)">🗂️ Patient 2</button>
         </div>
+        
+        <div class="status-banner" id="status-banner">
+            </div>
+
         <div class="mode-toggle">
-            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry (Habitual)</button>
-            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Refraction</button>
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
         </div>
     </div>
 
@@ -109,6 +137,9 @@
             <button class="gender-btn" id="g-M" onclick="setGender('M')">M</button>
             <button class="gender-btn" id="g-F" onclick="setGender('F')">F</button>
         </div>
+        
+        <textarea id="txt-prev-hx" class="info-input" style="width:100%; height: 50px; font-size: 12px;" placeholder="Paste Previous Hx prepared here..." oninput="updatePrevHx()"></textarea>
+
         <div class="timer-grid">
             <div class="t-btn" id="t-start" onclick="logTime('start')"><span class="t-lbl">Case Start</span><span class="t-val" id="v-start">--:--</span></div>
             <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Sup. Check</span><span class="t-val" id="v-check">--:--</span></div>
@@ -118,72 +149,74 @@
             <span class="dur-display" id="dur-student">Stud. Time: --</span>
             <span class="dur-display" id="dur-total">Total Time: --</span>
         </div>
+
+        <button id="btn-noshow" class="btn-noshow" onclick="toggleNoShow()">🚫 Mark as No Show</button>
     </div>
 
-    <div class="rx-matrix">
-        <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
-        <div class="rx-row">
-            <div class="eye-lbl">OD</div>
-            <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
-            <div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div>
-            <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
-            <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
-        </div>
-        <div class="rx-row">
-            <div class="eye-lbl">OS</div>
-            <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
-            <div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div>
-            <div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div>
-            <div class="rx-cell" id="c-OS-add" onclick="setF('OS','add')"></div>
-        </div>
-    </div>
-
-    <div class="numpad">
-        <div class="numpad-grid">
-            <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
-            <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
-            <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
-            <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
-        </div>
-    </div>
-
-    <div class="scroll-area">
-        <div id="tags-container-main"></div>
-        
-        <div class="footer-section">
-            <div class="group-title">Performance Grading (1-5)</div>
-            <div class="score-row"><div class="score-label">Preliminary Test</div><div class="score-btns" id="sc-prelim"></div></div>
-            <div class="score-row"><div class="score-label">Communication</div><div class="score-btns" id="sc-comm"></div></div>
-            <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
-            <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
-            <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
-            
-            <textarea id="txt-note" placeholder="Additional observations / comments..."></textarea>
-            
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary Report</button>
-                <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="showResetZone()">Reset All</button>
+    <div id="main-content-zone">
+        <div class="rx-matrix">
+            <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
+            <div class="rx-row">
+                <div class="eye-lbl">OD</div>
+                <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
+                <div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div>
+                <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
+                <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
             </div>
+            <div class="rx-row">
+                <div class="eye-lbl">OS</div>
+                <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
+                <div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div>
+                <div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div>
+                <div class="rx-cell" id="c-OS-add" onclick="setF('OS','add')"></div>
+            </div>
+        </div>
 
-            <div id="reset-zone" style="display: none; margin-top: 15px; padding: 15px; background: #2a1010; border: 1px solid var(--accent-red); border-radius: 8px;">
-                <div style="font-size: 13px; font-weight: bold; color: var(--accent-red); margin-bottom: 12px;">確認重置 (請勾選以下三項解鎖)：</div>
+        <div class="numpad">
+            <div class="numpad-grid">
+                <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
+                <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
+                <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
+                <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
+            </div>
+        </div>
+
+        <div class="scroll-area">
+            <div id="tags-container-main"></div>
+            
+            <div class="footer-section">
+                <div class="group-title">Performance Grading (1-5)</div>
+                <div class="score-row"><div class="score-label">Preliminary Test</div><div class="score-btns" id="sc-prelim"></div></div>
+                <div class="score-row"><div class="score-label">Communication</div><div class="score-btns" id="sc-comm"></div></div>
+                <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
+                <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
+                <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
                 
-                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
-                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 1. 我明白這將永久刪除所有紀錄
-                </label>
-                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
-                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 2. 這個 clinical log 真的好好用
-                </label>
-                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 13px; color: white;">
-                    <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 3. 我有常懷感恩的心，多謝 JP
-                </label>
+                <textarea id="txt-note" style="min-height: 80px;" placeholder="Additional observations / comments..."></textarea>
+                <textarea id="txt-last-exam" style="min-height: 60px;" placeholder="Last Eye Exam Clinical Report Brief Summary..."></textarea>
                 
-                <div style="display: flex; gap: 10px;">
-                    <button id="btn-confirm-reset" class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: #888;" disabled onclick="executeReset()">確定清空</button>
-                    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #333333; color: white;" onclick="hideResetZone()">取消</button>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary</button>
+                    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="showResetZone()">Reset All</button>
+                </div>
+
+                <div id="reset-zone" style="display: none; margin-top: 15px; padding: 15px; background: #2a1010; border: 1px solid var(--accent-red); border-radius: 8px;">
+                    <div style="font-size: 13px; font-weight: bold; color: var(--accent-red); margin-bottom: 12px;">確認重置 (請勾選解鎖)：</div>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 1. 永久刪除所有紀錄
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 2. 這個 clinical log 真的好好用
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 3. 我有常懷感恩的心，多謝 JP
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-confirm-reset" class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: #888;" disabled onclick="executeReset()">確定清空</button>
+                        <button class="btn-sum" style="flex: 1; margin-top: 0; background: #333333; color: white;" onclick="hideResetZone()">取消</button>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -191,10 +224,12 @@
 <script>
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
     
-    // ==========================================
-    // 擴充版臨床標籤資料庫 (可隨時自行新增/修改字串)
-    // ==========================================
     const tagsDB = {
+        'RED FLAG (Unsafe Practice)': [
+            'Poor Infection Control (Hygiene)', 'Instilled Wrong Eye Drop/Medication', 
+            'Missed Vision-Threatening Disease', 'Failed to Manage Emergency', 
+            'Physical Harm Risk to Patient'
+        ],
         'Hx Taking': [
             'Vague Chief Complaint', 'Missed Ocular Hx', 'Missed Systemic Hx', 
             'Medications not recorded', 'Poor Questioning Flow'
@@ -218,25 +253,30 @@
         ]
     };
 
-    let db = JSON.parse(localStorage.getItem('optom_v6')) || {};
+    let db = JSON.parse(localStorage.getItem('optom_v10')) || {};
 
     function init() {
+        if (!db.settings) {
+            db.settings = { names: {1: 'S 1', 2: 'S 2', 3: 'S 3', 4: 'S 4'}, showS4: false };
+        }
+
         for(let s=1;s<=4;s++) { 
             if(!db[s]) db[s]={}; 
             for(let p=1;p<=2;p++) { 
                 if(!db[s][p]) db[s][p]={ 
-                    age:'', gender:'', times:{start:null,check:null,end:null}, 
+                    age:'', gender:'', prevHx:'', noShow: false, times:{start:null,check:null,end:null}, 
                     lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, 
-                    tags:[], scores:{prelim:3, comm:3, prof:3, fluency:3, accuracy:3}, note:'' 
+                    tags:[], scores:{prelim:3, comm:3, prof:3, fluency:3, accuracy:3}, note:'', lastExam: '' 
                 }; 
             } 
         }
         
-        // Render Tags from DB
         let tagsHtml = '';
         for (const [category, tags] of Object.entries(tagsDB)) {
-            tagsHtml += `<div class="tag-group"><div class="group-title">${category}</div><div class="tag-grid">`;
-            tagsHtml += tags.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
+            let isRedFlagCat = category === 'RED FLAG (Unsafe Practice)';
+            let titleClass = isRedFlagCat ? 'group-title-redflag' : '';
+            tagsHtml += `<div class="tag-group"><div class="group-title ${titleClass}">${category}</div><div class="tag-grid">`;
+            tagsHtml += tags.map(t => `<button class="tag ${isRedFlagCat ? 'tag-redflag' : ''}" onclick="tglT('${t}')">${t}</button>`).join('');
             tagsHtml += `</div></div>`;
         }
         document.getElementById('tags-container-main').innerHTML = tagsHtml;
@@ -244,17 +284,45 @@
         ['prelim','comm','prof','fluency','accuracy'].forEach(id => {
             document.getElementById('sc-'+id).innerHTML = [1,2,3,4,5].map(n => `<button class="s-btn" onclick="setSc('${id}',${n})">${n}</button>`).join('');
         });
+        
         render();
     }
+    
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v6', JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v10', JSON.stringify(db)); }
 
     function render() {
         let d = db[cS][cP];
+        
+        // 處理 S4 顯示邏輯
+        document.getElementById('tab-s4').style.display = db.settings.showS4 ? 'block' : 'none';
+        document.getElementById('btn-add-s').style.display = db.settings.showS4 ? 'none' : 'block';
+
+        for(let i=1; i<=4; i++) { document.getElementById('tab-s'+i).innerText = '👨‍⚕️ ' + db.settings.names[i]; }
+
+        document.getElementById('status-banner').innerHTML = `
+            📝 評估中: 👨‍⚕️ ${db.settings.names[cS]} 
+            <span class="edit-icon" onclick="renameStudent(${cS})" title="Edit Name">✏️</span> 
+            ➔ 🗂️ Patient ${cP}
+        `;
+
         document.getElementById('p-age').value = d.age;
         document.getElementById('g-M').className = 'gender-btn ' + (d.gender=='M'?'active':'');
         document.getElementById('g-F').className = 'gender-btn ' + (d.gender=='F'?'active':'');
+        document.getElementById('txt-prev-hx').value = d.prevHx;
         
+        // 處理 No Show 狀態與介面隱藏
+        let btnNoShow = document.getElementById('btn-noshow');
+        if(d.noShow) {
+            btnNoShow.className = 'btn-noshow active';
+            btnNoShow.innerText = '🚫 Patient marked as No Show (Tap to undo)';
+            document.getElementById('main-content-zone').style.display = 'none';
+        } else {
+            btnNoShow.className = 'btn-noshow';
+            btnNoShow.innerText = '🚫 Mark as No Show';
+            document.getElementById('main-content-zone').style.display = 'block';
+        }
+
         ['start','check','end'].forEach(k => {
             let timeStr = d.times[k] ? new Date(d.times[k]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '--:--';
             document.getElementById('v-'+k).innerText = timeStr;
@@ -272,6 +340,20 @@
             document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i)=>b.classList.toggle('active', i+1==d.scores[id]));
         });
         document.getElementById('txt-note').value = d.note;
+        document.getElementById('txt-last-exam').value = d.lastExam;
+    }
+
+    function addS4() { db.settings.showS4 = true; save(); render(); }
+    
+    function toggleNoShow() { db[cS][cP].noShow = !db[cS][cP].noShow; save(); render(); }
+
+    function renameStudent(s) {
+        let currentName = db.settings.names[s];
+        let newName = prompt(`Enter real name or initials for Student ${s}:`, currentName);
+        if (newName !== null && newName.trim() !== "") {
+            db.settings.names[s] = newName.trim();
+            save(); render();
+        }
     }
 
     function logTime(k) { db[cS][cP].times[k] = db[cS][cP].times[k] ? null : new Date().toISOString(); save(); render(); }
@@ -290,44 +372,64 @@
     }
 
     function updateInfo() { db[cS][cP].age = document.getElementById('p-age').value; save(); }
+    function updatePrevHx() { db[cS][cP].prevHx = document.getElementById('txt-prev-hx').value; save(); }
     function setGender(g) { db[cS][cP].gender = db[cS][cP].gender == g ? '' : g; save(); render(); }
-    function setS(s) { cS=s; updNav('nav-s',s-1); render(); }
-    function setP(p) { cP=p; updNav('nav-p',p-1); render(); }
+    
+    function setS(s) { cS = s; document.body.setAttribute('data-student', s); updNav('nav-s', s-1); render(); }
+    function setP(p) { cP = p; document.querySelectorAll('#nav-p .p-btn').forEach((b,i)=>b.classList.toggle('active', i==p-1)); render(); }
     function updNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i)=>b.classList.toggle('active', i==idx)); }
     function setM(m) { cM=m; document.getElementById('btn-lens').classList.toggle('active',m=='lens'); document.getElementById('btn-rx').classList.toggle('active',m=='rx'); render(); }
     function setF(e,f) { aE=e; aF=f; render(); }
+    
     function inN(n) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' && v.length>=3) return; db[cS][cP][cM][aE][aF] += n; save(); render(); }
     function inD(d) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' || v.includes('.')) return; db[cS][cP][cM][aE][aF] += (v=='+'||v=='-'?'0':'')+d; save(); render(); }
     function tglSign() { if(aF!='sph') return; let v = db[cS][cP][cM][aE][aF]; db[cS][cP][cM][aE][aF] = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); save(); render(); }
     function clr() { db[cS][cP][cM][aE][aF] = aF=='cyl'?'-':(aF=='axis'?'':'+'); save(); render(); }
     function tglT(t) { let ts = db[cS][cP].tags; if(ts.includes(t)) db[cS][cP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
     function setSc(id,n) { db[cS][cP].scores[id]=n; save(); render(); }
-    document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
 
     function genSum() {
         let r = "=== Clinical Supervision Summary Report ===\n";
+        let redFlagsList = tagsDB['RED FLAG (Unsafe Practice)'];
+
         for(let s=1;s<=4;s++){
-            r += `\n[Student ${s}]\n`;
+            if (s === 4 && !db.settings.showS4) continue; // 略過未啟用的 S4
+            let studentName = db.settings.names[s];
+            r += `\n[Student: ${studentName}]\n`;
+            
             for(let p=1;p<=2;p++){
                 let d = db[s][p];
+                
+                if (d.noShow) {
+                    r += `  Patient ${p}:\n    *** NO SHOW ***\n`;
+                    continue;
+                }
+
                 if(d.times.start){
                     let st = d.times.start && d.times.check ? Math.floor((new Date(d.times.check)-new Date(d.times.start))/60000) : '--';
                     let tt = d.times.start && d.times.end ? Math.floor((new Date(d.times.end)-new Date(d.times.start))/60000) : '--';
+                    
+                    let hasRedFlag = d.tags.some(tag => redFlagsList.includes(tag));
+                    let gradingOutput = `Grading: Prelim(${d.scores.prelim}), Comm(${d.scores.comm}), Prof(${d.scores.prof}), Fluen(${d.scores.fluency}), Accu(${d.scores.accuracy})`;
+                    
+                    if(hasRedFlag) {
+                        gradingOutput = `*** AUTOMATIC FAIL (UNSAFE PRACTICE RED FLAG TRIGGERED) ***\n    ` + gradingOutput;
+                    }
+
                     r += `  Patient ${p} (${d.age || '?'}${d.gender || '?'}):\n`;
+                    if (d.prevHx) r += `    Prev Hx: ${d.prevHx}\n`;
                     r += `    Time: Total ${tt}m, Stud. ${st}m\n`;
                     r += `    Rx OD: ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis}, OS: ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
-                    r += `    Grading: Prelim(${d.scores.prelim}), Comm(${d.scores.comm}), Prof(${d.scores.prof}), Fluen(${d.scores.fluency}), Accu(${d.scores.accuracy})\n`;
+                    r += `    ${gradingOutput}\n`;
                     r += `    Tags: ${d.tags.join(', ') || 'None'}\n`;
                     r += `    Comments: ${d.note || 'None'}\n`;
+                    if (d.lastExam) r += `    Last Exam Summary: ${d.lastExam}\n`;
                 }
             }
         }
         navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
     }
 
-    // ==========================================
-    // Tick Box 解鎖重置機制
-    // ==========================================
     function showResetZone() {
         document.getElementById('reset-zone').style.display = 'block';
         document.querySelectorAll('.reset-chk').forEach(chk => chk.checked = false);
@@ -355,10 +457,11 @@
     }
 
     function executeReset() {
-        localStorage.removeItem('optom_v6');
+        localStorage.removeItem('optom_v10');
         db = {};
         init();
         hideResetZone();
+        setS(1);
         alert("資料已安全清空。\n謝謝 JP！");
     }
 
