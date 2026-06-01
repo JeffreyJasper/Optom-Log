@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V10</title>
+    <title>Clinical Supervisor Log - Optometry V11</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -193,7 +193,6 @@
                 <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
                 
                 <textarea id="txt-note" style="min-height: 80px;" placeholder="Additional observations / comments..."></textarea>
-                <textarea id="txt-last-exam" style="min-height: 60px;" placeholder="Last Eye Exam Clinical Report Brief Summary..."></textarea>
                 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary</button>
@@ -253,7 +252,7 @@
         ]
     };
 
-    let db = JSON.parse(localStorage.getItem('optom_v10')) || {};
+    let db = JSON.parse(localStorage.getItem('optom_v11')) || {};
 
     function init() {
         if (!db.settings) {
@@ -266,7 +265,7 @@
                 if(!db[s][p]) db[s][p]={ 
                     age:'', gender:'', prevHx:'', noShow: false, times:{start:null,check:null,end:null}, 
                     lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, 
-                    tags:[], scores:{prelim:3, comm:3, prof:3, fluency:3, accuracy:3}, note:'', lastExam: '' 
+                    tags:[], scores:{prelim:3, comm:3, prof:3, fluency:3, accuracy:3}, note:''
                 }; 
             } 
         }
@@ -289,7 +288,7 @@
     }
     
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v10', JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v11', JSON.stringify(db)); }
 
     function render() {
         let d = db[cS][cP];
@@ -340,7 +339,6 @@
             document.querySelectorAll(`#sc-${id} .s-btn`).forEach((b,i)=>b.classList.toggle('active', i+1==d.scores[id]));
         });
         document.getElementById('txt-note').value = d.note;
-        document.getElementById('txt-last-exam').value = d.lastExam;
     }
 
     function addS4() { db.settings.showS4 = true; save(); render(); }
@@ -388,12 +386,14 @@
     function tglT(t) { let ts = db[cS][cP].tags; if(ts.includes(t)) db[cS][cP].tags = ts.filter(x=>x!=t); else ts.push(t); save(); render(); }
     function setSc(id,n) { db[cS][cP].scores[id]=n; save(); render(); }
 
+    document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
+
     function genSum() {
         let r = "=== Clinical Supervision Summary Report ===\n";
         let redFlagsList = tagsDB['RED FLAG (Unsafe Practice)'];
 
         for(let s=1;s<=4;s++){
-            if (s === 4 && !db.settings.showS4) continue; // 略過未啟用的 S4
+            if (s === 4 && !db.settings.showS4) continue;
             let studentName = db.settings.names[s];
             r += `\n[Student: ${studentName}]\n`;
             
@@ -423,7 +423,6 @@
                     r += `    ${gradingOutput}\n`;
                     r += `    Tags: ${d.tags.join(', ') || 'None'}\n`;
                     r += `    Comments: ${d.note || 'None'}\n`;
-                    if (d.lastExam) r += `    Last Exam Summary: ${d.lastExam}\n`;
                 }
             }
         }
@@ -457,7 +456,7 @@
     }
 
     function executeReset() {
-        localStorage.removeItem('optom_v10');
+        localStorage.removeItem('optom_v11');
         db = {};
         init();
         hideResetZone();
