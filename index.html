@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V13</title>
+    <title>Clinical Supervisor Log - Optometry V14</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -14,6 +14,7 @@
             --fixed-green: #32d74b;
             --border: #333333;
             --cell-active: #1a2a3a;
+            
             --theme-color: #0a84ff;
             --theme-dark: #002b5e;
         }
@@ -37,54 +38,82 @@
         .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: bold; transition: color 0.3s; }
         .tab-btn.active { color: var(--theme-color); border-bottom: 3px solid var(--theme-color); background: #121212; }
         
+        /* Secondary Navigation (Patient) */
         .patient-tabs { display: flex; padding: 10px; background: #000; gap: 10px; justify-content: center; }
         .p-btn { flex: 1; padding: 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold; }
         .p-btn.active { background: #333; color: white; border-color: #555; }
 
-        .status-banner { background: var(--theme-dark); color: white; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; border-bottom: 1px solid var(--theme-color); transition: all 0.3s; }
+        /* Dynamic Status Banner */
+        .status-banner { background: var(--theme-dark); color: white; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; border-bottom: 1px solid var(--theme-color); transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
+        .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
+        .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold;}
+        .m-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
+
+        /* Patient Info & Timer */
         .info-timer-section { padding: 10px; background: #121212; border-bottom: 1px solid var(--border); }
+        .patient-info { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .info-input { background: #000; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; flex: 1; font-size: 14px; box-sizing: border-box; }
         .gender-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
         .gender-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
         
         .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
         .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
-        .t-btn.active { border-color: var(--fixed-green); background: #143a1a; }
+        .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
         .t-lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; display: block; text-transform: uppercase;}
         .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
-        
-        .btn-noshow { width: 100%; padding: 10px; background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        .dur-display { font-size: 10px; color: var(--theme-color); margin-top: 4px; display: block; font-weight: bold; }
+
+        /* No Show Button */
+        .btn-noshow { width: 100%; padding: 10px; background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
         .btn-noshow.active { background: #3a1515; color: var(--accent-red); border-color: var(--accent-red); }
 
+        /* Rx Matrix */
         .rx-matrix { padding: 10px; background: var(--bg-color); }
+        .rx-header { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 4px; }
+        .rx-header div { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; }
         .rx-row { display: grid; grid-template-columns: 30px repeat(4, 1fr); gap: 6px; margin-bottom: 8px; align-items: center; }
-        .rx-cell { background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; }
+        .eye-lbl { font-size: 16px; font-weight: bold; color: var(--text-muted); text-align: center; }
+        .rx-cell { background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; font-family: monospace; color: var(--text-main); }
         .rx-cell.active { border-color: var(--theme-color); background: var(--cell-active); }
+        .val-minus { color: var(--accent-red); }
+        .val-plus { color: var(--fixed-green); }
 
-        .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; padding: 0 10px 10px 10px; }
+        /* Numpad */
+        .numpad { padding: 0 10px 10px 10px; background: var(--bg-color); border-bottom: 1px solid var(--border); }
+        .numpad-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 8px; }
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
+        .btn-n:active { background: #48484a; }
         .btn-n.dec { color: var(--theme-color); font-size: 18px; font-weight: bold; }
+        .btn-n.action { background: #3a3a3c; font-size: 14px; }
+        .btn-n.sign { color: var(--fixed-green); font-size: 22px; }
 
+        /* Scroll Area & Dynamic Tag Grid */
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
         .group-title { font-size: 11px; color: var(--theme-color); font-weight: bold; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; }
-        .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
-        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; }
+        .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+        .tag { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; line-height: 1.2;}
         .tag.active { border-color: var(--theme-color); background: var(--theme-dark); color: white; }
+        
+        /* Auto-grade Title */
+        .auto-grade-title { color: #ff9f0a; }
 
+        /* Scoring & Comments */
         .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); margin-bottom: 40px; }
         .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .score-label { font-size: 12px; font-weight: bold; color: var(--text-main); }
+        .score-btns { display: flex; gap: 4px; }
         .s-btn { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 12px; }
         .s-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
-        
-        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; box-sizing: border-box; margin-top:10px; }
-        .btn-sum { width: 100%; background: var(--theme-color); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; }
+
+        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 10px; font-size: 14px; margin-top: 10px; box-sizing: border-box; }
+        .btn-sum { width: 100%; background: var(--theme-color); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px; text-transform: uppercase;}
     </style>
 </head>
 <body data-student="1">
 
 <div class="app-container">
-    <!-- AM / PM 分流按鈕 -->
+    <!-- AM/PM Session Toggle -->
     <div class="session-header">
         <button class="sess-btn active" id="btn-AM" onclick="setSession('AM')">☀️ AM Session</button>
         <button class="sess-btn" id="btn-PM" onclick="setSession('PM')">🌙 PM Session</button>
@@ -92,26 +121,33 @@
 
     <div class="nav-header">
         <div class="tabs" id="nav-s">
-            <button class="tab-btn active" id="tab-s1" onclick="setS(1)">S 1</button>
-            <button class="tab-btn" id="tab-s2" onclick="setS(2)">S 2</button>
-            <button class="tab-btn" id="tab-s3" onclick="setS(3)">S 3</button>
-            <button class="tab-btn" id="tab-s4" onclick="setS(4)" style="display:none;">S 4</button>
-            <button class="tab-btn" id="btn-add-s" onclick="addS4()" style="flex: 0.4;">➕</button>
+            <button class="tab-btn active" id="tab-s1" onclick="setS(1)">👨‍⚕️ S 1</button>
+            <button class="tab-btn" id="tab-s2" onclick="setS(2)">👨‍⚕️ S 2</button>
+            <button class="tab-btn" id="tab-s3" onclick="setS(3)">👨‍⚕️ S 3</button>
+            <button class="tab-btn" id="tab-s4" onclick="setS(4)" style="display:none;">👨‍⚕️ S 4</button>
+            <button class="tab-btn" id="btn-add-s" onclick="addS4()" style="flex: 0.4; font-size: 18px;">➕</button>
         </div>
         <div class="patient-tabs" id="nav-p">
             <button class="p-btn active" onclick="setP(1)">🗂️ Patient 1</button>
             <button class="p-btn" onclick="setP(2)">🗂️ Patient 2</button>
         </div>
+        
         <div class="status-banner" id="status-banner"></div>
+
+        <div class="mode-toggle">
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry (Habitual)</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
+        </div>
     </div>
 
     <div class="info-timer-section">
+        
         <div style="display: flex; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border);">
             <input type="text" id="s-name" class="info-input" placeholder="Student Name" oninput="updateStudentInfo()">
             <input type="text" id="s-group" class="info-input" style="max-width: 110px;" placeholder="Group (e.g. N1)" oninput="updateStudentInfo()">
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+        <div class="patient-info">
             <input type="text" id="p-id" class="info-input" style="flex: 1.5;" placeholder="Patient ID" oninput="updateInfo()">
             <input type="number" id="p-age" class="info-input" style="flex: 1; max-width: 70px;" placeholder="Age" oninput="updateInfo()">
             <button class="gender-btn" id="g-M" onclick="setGender('M')">M</button>
@@ -119,14 +155,18 @@
         </div>
         
         <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <textarea id="txt-prev-hx" class="info-input" style="width:100%; height: 42px; font-size: 12px; margin: 0;" placeholder="Previous Hx..." oninput="updatePrevHx()"></textarea>
-            <button class="sess-btn active" style="flex: 0 0 75px; margin: 0; padding: 0; font-size: 12px; background: #222;" onclick="setNewCase()">New Case</button>
+            <textarea id="txt-prev-hx" class="info-input" style="width:100%; height: 42px; font-size: 12px; margin: 0;" placeholder="Paste Previous Hx prepared here..." oninput="updatePrevHx()"></textarea>
+            <button class="m-btn active" style="flex: 0 0 75px; margin: 0; padding: 0; font-size: 12px;" onclick="setNewCase()">New Case</button>
         </div>
 
         <div class="timer-grid">
-            <div class="t-btn" id="t-start" onclick="logTime('start')"><span class="t-lbl">Start</span><span class="t-val" id="v-start">--:--</span></div>
-            <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Check</span><span class="t-val" id="v-check">--:--</span></div>
+            <div class="t-btn" id="t-start" onclick="logTime('start')"><span class="t-lbl">Case Start</span><span class="t-val" id="v-start">--:--</span></div>
+            <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Sup. Check</span><span class="t-val" id="v-check">--:--</span></div>
             <div class="t-btn" id="t-end" onclick="logTime('end')"><span class="t-lbl">Discharge</span><span class="t-val" id="v-end">--:--</span></div>
+        </div>
+        <div id="durations" style="margin-top: 8px; display: flex; justify-content: space-between;">
+            <span class="dur-display" id="dur-student">Stud. Time: --</span>
+            <span class="dur-display" id="dur-total">Total Time: --</span>
         </div>
 
         <button id="btn-noshow" class="btn-noshow" onclick="toggleNoShow()">🚫 Mark as No Show</button>
@@ -134,44 +174,78 @@
 
     <div id="main-content-zone">
         <div class="rx-matrix">
+            <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
             <div class="rx-row">
-                <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div><div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div><div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div><div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
+                <div class="eye-lbl">OD</div>
+                <div class="rx-cell active" id="c-OD-sph" onclick="setF('OD','sph')"></div>
+                <div class="rx-cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div>
+                <div class="rx-cell" id="c-OD-axis" onclick="setF('OD','axis')"></div>
+                <div class="rx-cell" id="c-OD-add" onclick="setF('OD','add')"></div>
             </div>
             <div class="rx-row">
-                <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div><div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div><div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div><div class="rx-cell" id="c-OS-add" onclick="setF('OS','add')"></div>
+                <div class="eye-lbl">OS</div>
+                <div class="rx-cell" id="c-OS-sph" onclick="setF('OS','sph')"></div>
+                <div class="rx-cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div>
+                <div class="rx-cell" id="c-OS-axis" onclick="setF('OS','axis')"></div>
+                <div class="rx-cell" id="c-OS-add" onclick="setF('OS','add')"></div>
             </div>
         </div>
-        <div class="numpad-grid">
-            <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
-            <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
-            <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
-            <button class="btn-n" style="color:var(--fixed-green);" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n" style="background:#333;" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
+
+        <div class="numpad">
+            <div class="numpad-grid">
+                <button class="btn-n" onclick="inN('7')">7</button><button class="btn-n" onclick="inN('8')">8</button><button class="btn-n" onclick="inN('9')">9</button><button class="btn-n dec" onclick="inD('.00')">.00</button>
+                <button class="btn-n" onclick="inN('4')">4</button><button class="btn-n" onclick="inN('5')">5</button><button class="btn-n" onclick="inN('6')">6</button><button class="btn-n dec" onclick="inD('.25')">.25</button>
+                <button class="btn-n" onclick="inN('1')">1</button><button class="btn-n" onclick="inN('2')">2</button><button class="btn-n" onclick="inN('3')">3</button><button class="btn-n dec" onclick="inD('.50')">.50</button>
+                <button class="btn-n sign" onclick="tglSign()">+/-</button><button class="btn-n" onclick="inN('0')">0</button><button class="btn-n action" onclick="clr()">C</button><button class="btn-n dec" onclick="inD('.75')">.75</button>
+            </div>
         </div>
 
         <div class="scroll-area">
             <div id="tags-container-main"></div>
             
             <div class="footer-section">
-                <div class="group-title" style="color: #ff9f0a;">⚡ Auto-Grading Active (Click to Override)</div>
-                <div class="score-row"><div>Preliminary</div><div class="score-btns" id="sc-prelim"></div></div>
-                <div class="score-row"><div>Communication</div><div class="score-btns" id="sc-comm"></div></div>
-                <div class="score-row"><div>Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
-                <div class="score-row"><div>Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
-                <div class="score-row"><div>Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
+                <div class="group-title auto-grade-title">⚡ Performance Grading (Auto-Deduction Active)</div>
+                <div class="score-row"><div class="score-label">Preliminary Test</div><div class="score-btns" id="sc-prelim"></div></div>
+                <div class="score-row"><div class="score-label">Communication</div><div class="score-btns" id="sc-comm"></div></div>
+                <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
+                <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
+                <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
                 
-                <textarea id="txt-note" style="min-height: 80px;" placeholder="Additional comments..."></textarea>
-                <button class="btn-sum" onclick="genSum()">Copy AI Summary</button>
+                <textarea id="txt-note" style="min-height: 80px;" placeholder="Additional observations / comments..."></textarea>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-sum" style="flex: 2; margin-top: 0;" onclick="genSum()">Copy AI Summary</button>
+                    <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="showResetZone()">Reset All</button>
+                </div>
+
+                <!-- 完美保留的 V12 Reset 防呆區域 -->
+                <div id="reset-zone" style="display: none; margin-top: 15px; padding: 15px; background: #2a1010; border: 1px solid var(--accent-red); border-radius: 8px;">
+                    <div style="font-size: 13px; font-weight: bold; color: var(--accent-red); margin-bottom: 12px;">確認重置 (請勾選解鎖)：</div>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 1. 永久刪除當前 Session 所有紀錄
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 2. 這個 clinical log 真的好好用
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 13px; color: white;">
+                        <input type="checkbox" class="reset-chk" style="width: 20px; height: 20px;" onchange="checkReset()"> 3. 我有常懷感恩的心，多謝 JP
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-confirm-reset" class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: #888;" disabled onclick="executeReset()">確定清空</button>
+                        <button class="btn-sum" style="flex: 1; margin-top: 0; background: #333333; color: white;" onclick="hideResetZone()">取消</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let currentSession = 'AM'; // 預設 AM
+    let currentSession = 'AM';
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
     let db = {};
-
-    // Master List: Common Optometry Errors (V13 Update)
+    
+    // V13 Master List of Common Errors
     const tagsDB = {
         '1. History & Workflow': ['Inefficient Workflow', 'Missed Chief Complaint', 'Incomplete Glauc Risks', 'Systemic Med Ignorance'],
         '2. Preliminary Tests': ['3-Sec Rule Violation', 'Incorrect Target/Env', 'Confrontation Errors', 'VA Oversights', 'Measurement Fails'],
@@ -182,7 +256,7 @@
         '7. Professionalism': ['Academic Dishonesty', 'Lack of Preparation', 'Unprofessional Comm', 'Poor Attire/Conduct']
     };
 
-    // 自動評分扣分對應表 (該分類有錯誤，對應項目扣分)
+    // Auto-Grading Deduction Map
     const gradingMap = {
         '1. History & Workflow': ['comm', 'fluency'],
         '2. Preliminary Tests': ['prelim'],
@@ -194,10 +268,15 @@
     };
 
     function init() {
-        let storageKey = 'optom_v13_' + currentSession;
-        db = JSON.parse(localStorage.getItem(storageKey)) || {};
-        
-        if (!db.settings) db.settings = { names: {1: '', 2: '', 3: '', 4: ''}, groups: {1: '', 2: '', 3: '', 4: ''}, showS4: false };
+        // 使用 Session 獨立儲存空間
+        db = JSON.parse(localStorage.getItem('optom_v14_' + currentSession)) || {};
+
+        if (!db.settings) {
+            db.settings = { names: {1: '', 2: '', 3: '', 4: ''}, groups: {1: '', 2: '', 3: '', 4: ''}, showS4: false };
+        }
+        if (!db.settings.groups) {
+            db.settings.groups = {1: '', 2: '', 3: '', 4: ''}; 
+        }
 
         for(let s=1;s<=4;s++) { 
             if(!db[s]) db[s]={}; 
@@ -205,7 +284,7 @@
                 if(!db[s][p]) db[s][p]={ 
                     pxId: '', age:'', gender:'', prevHx:'', noShow: false, times:{start:null,check:null,end:null}, 
                     lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, 
-                    tags:[], scores:{prelim:5, comm:5, prof:5, fluency:5, accuracy:5}, note:''
+                    tags:[], scores:{prelim:5, comm:5, prof:5, fluency:5, accuracy:5}, note:'' // 預設滿分 5
                 }; 
             } 
         }
@@ -213,7 +292,7 @@
         let tagsHtml = '';
         for (const [category, tags] of Object.entries(tagsDB)) {
             tagsHtml += `<div class="tag-group"><div class="group-title">${category}</div><div class="tag-grid">`;
-            tagsHtml += tags.map(t => `<button class="tag" onclick="tglT('${t}', '${category}')">${t}</button>`).join('');
+            tagsHtml += tags.map(t => `<button class="tag" onclick="tglT('${t}')">${t}</button>`).join('');
             tagsHtml += `</div></div>`;
         }
         document.getElementById('tags-container-main').innerHTML = tagsHtml;
@@ -226,13 +305,21 @@
     }
     
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v13_' + currentSession, JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v14_' + currentSession, JSON.stringify(db)); }
 
     function setSession(sess) {
         currentSession = sess;
         document.getElementById('btn-AM').className = 'sess-btn ' + (sess=='AM'?'active':'');
         document.getElementById('btn-PM').className = 'sess-btn ' + (sess=='PM'?'active':'');
-        init(); // 重新讀取對應的資料庫
+        
+        // 切換 Session 後重置視圖到 S1 P1
+        cS = 1; cP = 1; cM = 'lens'; aE = 'OD'; aF = 'sph';
+        document.querySelectorAll('#nav-s .tab-btn').forEach((b,i)=>b.classList.toggle('active', i==0));
+        document.querySelectorAll('#nav-p .p-btn').forEach((b,i)=>b.classList.toggle('active', i==0));
+        document.getElementById('btn-lens').classList.add('active');
+        document.getElementById('btn-rx').classList.remove('active');
+        
+        init();
     }
 
     function render() {
@@ -241,26 +328,42 @@
         document.getElementById('tab-s4').style.display = db.settings.showS4 ? 'block' : 'none';
         document.getElementById('btn-add-s').style.display = db.settings.showS4 ? 'none' : 'block';
 
-        for(let i=1; i<=4; i++) document.getElementById('tab-s'+i).innerText = db.settings.names[i] || ('S'+i); 
+        for(let i=1; i<=4; i++) { 
+            document.getElementById('tab-s'+i).innerText = '👨‍⚕️ ' + (db.settings.names[i] || ('S ' + i)); 
+        }
         document.getElementById('s-name').value = db.settings.names[cS];
         document.getElementById('s-group').value = db.settings.groups[cS];
         
-        document.getElementById('status-banner').innerHTML = `👨‍⚕️ ${db.settings.names[cS]||'S'+cS} ➔ Patient ${cP}`;
+        let dispName = db.settings.names[cS] || ('S ' + cS);
+        let grpStr = db.settings.groups[cS] ? ` (${db.settings.groups[cS]})` : '';
+        document.getElementById('status-banner').innerHTML = `📝 評估中: 👨‍⚕️ ${dispName}${grpStr} ➔ 🗂️ Patient ${cP}`;
 
-        document.getElementById('p-id').value = d.pxId; document.getElementById('p-age').value = d.age;
+        document.getElementById('p-id').value = d.pxId;
+        document.getElementById('p-age').value = d.age;
         document.getElementById('g-M').className = 'gender-btn ' + (d.gender=='M'?'active':'');
         document.getElementById('g-F').className = 'gender-btn ' + (d.gender=='F'?'active':'');
         document.getElementById('txt-prev-hx').value = d.prevHx;
         
-        document.getElementById('main-content-zone').style.display = d.noShow ? 'none' : 'block';
-        document.getElementById('btn-noshow').className = 'btn-noshow ' + (d.noShow?'active':'');
+        let btnNoShow = document.getElementById('btn-noshow');
+        if(d.noShow) {
+            btnNoShow.className = 'btn-noshow active';
+            btnNoShow.innerText = '🚫 Patient marked as No Show (Tap to undo)';
+            document.getElementById('main-content-zone').style.display = 'none';
+        } else {
+            btnNoShow.className = 'btn-noshow';
+            btnNoShow.innerText = '🚫 Mark as No Show';
+            document.getElementById('main-content-zone').style.display = 'block';
+        }
 
         ['start','check','end'].forEach(k => {
-            document.getElementById('v-'+k).innerText = d.times[k] ? new Date(d.times[k]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '--:--';
+            let timeStr = d.times[k] ? new Date(d.times[k]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '--:--';
+            document.getElementById('v-'+k).innerText = timeStr;
             document.getElementById('t-'+k).className = 't-btn ' + (d.times[k]?'active':'');
         });
+        updateDurations();
 
-        let rx = d.rx;
+        // 核心修復：正確顯示 Lens 或 Rx 矩陣
+        let rx = d[cM];
         ['OD','OS'].forEach(e => ['sph','cyl','axis','add'].forEach(f => {
             let el = document.getElementById(`c-${e}-${f}`); el.innerText = rx[e][f];
             el.className = 'rx-cell ' + (e==aE && f==aF?'active ':'') + (rx[e][f].includes('-')?'val-minus':'val-plus');
@@ -280,36 +383,60 @@
     function updateStudentInfo() {
         db.settings.names[cS] = document.getElementById('s-name').value.trim();
         db.settings.groups[cS] = document.getElementById('s-group').value.trim();
-        save(); render();
+        save();
+        
+        let dispName = db.settings.names[cS] || ('S ' + cS);
+        let grpStr = db.settings.groups[cS] ? ` (${db.settings.groups[cS]})` : '';
+        document.getElementById('tab-s'+cS).innerText = '👨‍⚕️ ' + dispName;
+        document.getElementById('status-banner').innerHTML = `📝 評估中: 👨‍⚕️ ${dispName}${grpStr} ➔ 🗂️ Patient ${cP}`;
     }
-    function updateInfo() { db[cS][cP].pxId = document.getElementById('p-id').value; db[cS][cP].age = document.getElementById('p-age').value; save(); }
+
+    function logTime(k) { db[cS][cP].times[k] = db[cS][cP].times[k] ? null : new Date().toISOString(); save(); render(); }
+    
+    function updateDurations() {
+        let t = db[cS][cP].times;
+        if(t.start && t.check) {
+            let diff = Math.floor((new Date(t.check) - new Date(t.start)) / 60000);
+            document.getElementById('dur-student').innerText = `Stud. Time: ${diff}m`;
+        } else document.getElementById('dur-student').innerText = 'Stud. Time: --';
+        
+        if(t.start && t.end) {
+            let diff = Math.floor((new Date(t.end) - new Date(t.start)) / 60000);
+            document.getElementById('dur-total').innerText = `Total Time: ${diff}m`;
+        } else document.getElementById('dur-total').innerText = 'Total Time: --';
+    }
+
+    function updateInfo() { 
+        db[cS][cP].pxId = document.getElementById('p-id').value;
+        db[cS][cP].age = document.getElementById('p-age').value; 
+        save(); 
+    }
+    
     function updatePrevHx() { db[cS][cP].prevHx = document.getElementById('txt-prev-hx').value; save(); }
     function setGender(g) { db[cS][cP].gender = db[cS][cP].gender == g ? '' : g; save(); render(); }
     
-    function logTime(k) { db[cS][cP].times[k] = db[cS][cP].times[k] ? null : new Date().toISOString(); save(); render(); }
-    
-    function setS(s) { cS = s; document.body.setAttribute('data-student', s); document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i==s-1)); render(); }
+    function setS(s) { cS = s; document.body.setAttribute('data-student', s); updNav('nav-s', s-1); render(); }
     function setP(p) { cP = p; document.querySelectorAll('#nav-p .p-btn').forEach((b,i)=>b.classList.toggle('active', i==p-1)); render(); }
+    function updNav(id, idx) { document.querySelectorAll(`#${id} .tab-btn`).forEach((b,i)=>b.classList.toggle('active', i==idx)); }
+    function setM(m) { cM=m; document.getElementById('btn-lens').classList.toggle('active',m=='lens'); document.getElementById('btn-rx').classList.toggle('active',m=='rx'); render(); }
     function setF(e,f) { aE=e; aF=f; render(); }
     
-    function inN(n) { let v = db[cS][cP].rx[aE][aF]; if(aF=='axis' && v.length>=3) return; db[cS][cP].rx[aE][aF] += n; save(); render(); }
-    function inD(d) { let v = db[cS][cP].rx[aE][aF]; if(aF=='axis' || v.includes('.')) return; db[cS][cP].rx[aE][aF] += (v=='+'||v=='-'?'0':'')+d; save(); render(); }
-    function tglSign() { if(aF!='sph') return; let v = db[cS][cP].rx[aE][aF]; db[cS][cP].rx[aE][aF] = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); save(); render(); }
-    function clr() { db[cS][cP].rx[aE][aF] = aF=='cyl'?'-':(aF=='axis'?'':'+'); save(); render(); }
-
-    // Tag Toggling with Auto-Grading
-    function tglT(t, category) { 
+    function inN(n) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' && v.length>=3) return; db[cS][cP][cM][aE][aF] += n; save(); render(); }
+    function inD(d) { let v = db[cS][cP][cM][aE][aF]; if(aF=='axis' || v.includes('.')) return; db[cS][cP][cM][aE][aF] += (v=='+'||v=='-'?'0':'')+d; save(); render(); }
+    function tglSign() { if(aF!='sph') return; let v = db[cS][cP][cM][aE][aF]; db[cS][cP][cM][aE][aF] = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); save(); render(); }
+    function clr() { db[cS][cP][cM][aE][aF] = aF=='cyl'?'-':(aF=='axis'?'':'+'); save(); render(); }
+    
+    function tglT(t) { 
         let ts = db[cS][cP].tags; 
         if(ts.includes(t)) ts.splice(ts.indexOf(t), 1); else ts.push(t); 
         
-        // 執行 Auto-Grade 邏輯
+        // Auto-Grade 扣分邏輯
         let scores = {prelim:5, comm:5, prof:5, fluency:5, accuracy:5};
         ts.forEach(activeTag => {
-            // 找出該 tag 屬於哪一類，然後扣分
             for (const [cat, tags] of Object.entries(tagsDB)) {
                 if (tags.includes(activeTag) && gradingMap[cat]) {
                     gradingMap[cat].forEach(scoreField => {
-                        scores[scoreField] = Math.max(1, scores[scoreField] - 1); // 扣 1 分，下限 1
+                        scores[scoreField] = Math.max(1, scores[scoreField] - 1); // 扣 1 分，下限保底 1
                     });
                 }
             }
@@ -319,30 +446,86 @@
     }
     
     function setSc(id,n) { db[cS][cP].scores[id]=n; save(); render(); }
+
     document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
 
     function genSum() {
-        let r = `=== Clinical Supervision Summary (${currentSession}) ===\n`;
+        let r = `=== Clinical Supervision Summary (${currentSession} Session) ===\n`;
+
         for(let s=1;s<=4;s++){
             if (s === 4 && !db.settings.showS4) continue;
-            let stuDisplay = db.settings.groups[s] ? `${db.settings.names[s]||'S'+s} [${db.settings.groups[s]}]` : (db.settings.names[s]||'S'+s);
+            
+            let studentName = db.settings.names[s] || ('S ' + s);
+            let groupName = db.settings.groups[s];
+            let stuDisplay = groupName ? `${studentName} [${groupName}]` : studentName;
+            
             r += `\n[Student: ${stuDisplay}]\n`;
             
             for(let p=1;p<=2;p++){
                 let d = db[s][p];
-                if (d.noShow) { r += `  Patient ${p}:\n    *** NO SHOW ***\n`; continue; }
+                
+                if (d.noShow) {
+                    r += `  Patient ${p}:\n    *** NO SHOW ***\n`;
+                    continue;
+                }
+
                 if(d.times.start){
                     let st = d.times.start && d.times.check ? Math.floor((new Date(d.times.check)-new Date(d.times.start))/60000) : '--';
-                    r += `  Patient ${p} (ID: ${d.pxId||'?'}, ${d.age||'?'}${d.gender||'?'}):\n`;
+                    let tt = d.times.start && d.times.end ? Math.floor((new Date(d.times.end)-new Date(d.times.start))/60000) : '--';
+                    
+                    let gradingOutput = `Grading: Prelim(${d.scores.prelim}), Comm(${d.scores.comm}), Prof(${d.scores.prof}), Fluen(${d.scores.fluency}), Accu(${d.scores.accuracy})`;
+
+                    let pxIdDisplay = d.pxId ? `ID: ${d.pxId}, ` : '';
+                    r += `  Patient ${p} (${pxIdDisplay}${d.age || '?'}${d.gender || '?'}):\n`;
                     if (d.prevHx) r += `    Prev Hx: ${d.prevHx}\n`;
-                    r += `    Time: Stud. ${st}m\n`;
-                    r += `    Grading: Prelim(${d.scores.prelim}), Comm(${d.scores.comm}), Prof(${d.scores.prof}), Fluen(${d.scores.fluency}), Accu(${d.scores.accuracy})\n`;
+                    r += `    Time: Total ${tt}m, Stud. ${st}m\n`;
+                    
+                    // 核心修復：雙重 Rx 完整匯出
+                    r += `    Habitual Lens: OD ${d.lens.OD.sph}/${d.lens.OD.cyl}x${d.lens.OD.axis} | OS ${d.lens.OS.sph}/${d.lens.OS.cyl}x${d.lens.OS.axis}\n`;
+                    r += `    Supervisor Rx: OD ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis} | OS ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
+                    
+                    r += `    ${gradingOutput}\n`;
                     r += `    Tags: ${d.tags.join(', ') || 'None'}\n`;
-                    if(d.note) r += `    Comments: ${d.note}\n`;
+                    r += `    Comments: ${d.note || 'None'}\n`;
                 }
             }
         }
         navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
+    }
+
+    function showResetZone() {
+        document.getElementById('reset-zone').style.display = 'block';
+        document.querySelectorAll('.reset-chk').forEach(chk => chk.checked = false);
+        checkReset(); 
+    }
+
+    function hideResetZone() {
+        document.getElementById('reset-zone').style.display = 'none';
+    }
+
+    function checkReset() {
+        let chks = document.querySelectorAll('.reset-chk');
+        let allChecked = Array.from(chks).every(chk => chk.checked);
+        let btn = document.getElementById('btn-confirm-reset');
+        
+        if (allChecked) {
+            btn.disabled = false;
+            btn.style.background = 'var(--accent-red)';
+            btn.style.color = 'white';
+        } else {
+            btn.disabled = true;
+            btn.style.background = '#3a3a3c';
+            btn.style.color = '#888';
+        }
+    }
+
+    function executeReset() {
+        localStorage.removeItem('optom_v14_' + currentSession);
+        db = {};
+        init();
+        hideResetZone();
+        setS(1);
+        alert(`資料已安全清空 (${currentSession} 區段)。\n謝謝 JP！`);
     }
 
     init();
