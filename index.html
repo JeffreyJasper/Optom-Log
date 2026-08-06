@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V14</title>
+    <title>Clinical Supervisor Log - Optometry V15</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -46,8 +46,8 @@
         /* Dynamic Status Banner */
         .status-banner { background: var(--theme-dark); color: white; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; border-bottom: 1px solid var(--theme-color); transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
-        .mode-toggle { display: flex; background: #000; padding: 8px; gap: 8px; }
-        .m-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold;}
+        .mode-toggle { display: flex; gap: 8px; }
+        .m-btn { flex: 1; padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold;}
         .m-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
 
         /* Patient Info & Timer */
@@ -60,7 +60,7 @@
         .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
         .t-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
         .t-btn.active { border-color: var(--accent-green); background: #143a1a; }
-        .t-lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; display: block; text-transform: uppercase;}
+        .t-lbl { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; display: block; text-transform: uppercase;}
         .t-val { font-size: 14px; font-weight: bold; font-family: monospace; }
         .dur-display { font-size: 10px; color: var(--theme-color); margin-top: 4px; display: block; font-weight: bold; }
 
@@ -133,11 +133,6 @@
         </div>
         
         <div class="status-banner" id="status-banner"></div>
-
-        <div class="mode-toggle">
-            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry (Habitual)</button>
-            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
-        </div>
     </div>
 
     <div class="info-timer-section">
@@ -161,7 +156,8 @@
 
         <div class="timer-grid">
             <div class="t-btn" id="t-start" onclick="logTime('start')"><span class="t-lbl">Case Start</span><span class="t-val" id="v-start">--:--</span></div>
-            <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Sup. Check</span><span class="t-val" id="v-check">--:--</span></div>
+            <!-- 修改標籤：將 Sup. Check 縮短為 Dilation -->
+            <div class="t-btn" id="t-check" onclick="logTime('check')"><span class="t-lbl">Dilation</span><span class="t-val" id="v-check">--:--</span></div>
             <div class="t-btn" id="t-end" onclick="logTime('end')"><span class="t-lbl">Discharge</span><span class="t-val" id="v-end">--:--</span></div>
         </div>
         <div id="durations" style="margin-top: 8px; display: flex; justify-content: space-between;">
@@ -173,6 +169,12 @@
     </div>
 
     <div id="main-content-zone">
+        <!-- 移動至此：度數切換按鈕放在這裡，剛好在輸入矩陣的上方 -->
+        <div class="mode-toggle" style="background: var(--bg-color); padding: 10px 10px 0 10px;">
+            <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry (Habitual)</button>
+            <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
+        </div>
+
         <div class="rx-matrix">
             <div class="rx-header"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
             <div class="rx-row">
@@ -218,7 +220,6 @@
                     <button class="btn-sum" style="flex: 1; margin-top: 0; background: #3a3a3c; color: var(--accent-red);" onclick="showResetZone()">Reset All</button>
                 </div>
 
-                <!-- 完美保留的 V12 Reset 防呆區域 -->
                 <div id="reset-zone" style="display: none; margin-top: 15px; padding: 15px; background: #2a1010; border: 1px solid var(--accent-red); border-radius: 8px;">
                     <div style="font-size: 13px; font-weight: bold; color: var(--accent-red); margin-bottom: 12px;">確認重置 (請勾選解鎖)：</div>
                     <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: white;">
@@ -245,7 +246,6 @@
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph';
     let db = {};
     
-    // V13 Master List of Common Errors
     const tagsDB = {
         '1. History & Workflow': ['Inefficient Workflow', 'Missed Chief Complaint', 'Incomplete Glauc Risks', 'Systemic Med Ignorance'],
         '2. Preliminary Tests': ['3-Sec Rule Violation', 'Incorrect Target/Env', 'Confrontation Errors', 'VA Oversights', 'Measurement Fails'],
@@ -256,7 +256,6 @@
         '7. Professionalism': ['Academic Dishonesty', 'Lack of Preparation', 'Unprofessional Comm', 'Poor Attire/Conduct']
     };
 
-    // Auto-Grading Deduction Map
     const gradingMap = {
         '1. History & Workflow': ['comm', 'fluency'],
         '2. Preliminary Tests': ['prelim'],
@@ -268,8 +267,7 @@
     };
 
     function init() {
-        // 使用 Session 獨立儲存空間
-        db = JSON.parse(localStorage.getItem('optom_v14_' + currentSession)) || {};
+        db = JSON.parse(localStorage.getItem('optom_v15_' + currentSession)) || {};
 
         if (!db.settings) {
             db.settings = { names: {1: '', 2: '', 3: '', 4: ''}, groups: {1: '', 2: '', 3: '', 4: ''}, showS4: false };
@@ -284,7 +282,7 @@
                 if(!db[s][p]) db[s][p]={ 
                     pxId: '', age:'', gender:'', prevHx:'', noShow: false, times:{start:null,check:null,end:null}, 
                     lens:{OD:bRx(),OS:bRx()}, rx:{OD:bRx(),OS:bRx()}, 
-                    tags:[], scores:{prelim:5, comm:5, prof:5, fluency:5, accuracy:5}, note:'' // 預設滿分 5
+                    tags:[], scores:{prelim:5, comm:5, prof:5, fluency:5, accuracy:5}, note:''
                 }; 
             } 
         }
@@ -305,14 +303,13 @@
     }
     
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
-    function save() { localStorage.setItem('optom_v14_' + currentSession, JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v15_' + currentSession, JSON.stringify(db)); }
 
     function setSession(sess) {
         currentSession = sess;
         document.getElementById('btn-AM').className = 'sess-btn ' + (sess=='AM'?'active':'');
         document.getElementById('btn-PM').className = 'sess-btn ' + (sess=='PM'?'active':'');
         
-        // 切換 Session 後重置視圖到 S1 P1
         cS = 1; cP = 1; cM = 'lens'; aE = 'OD'; aF = 'sph';
         document.querySelectorAll('#nav-s .tab-btn').forEach((b,i)=>b.classList.toggle('active', i==0));
         document.querySelectorAll('#nav-p .p-btn').forEach((b,i)=>b.classList.toggle('active', i==0));
@@ -362,7 +359,6 @@
         });
         updateDurations();
 
-        // 核心修復：正確顯示 Lens 或 Rx 矩陣
         let rx = d[cM];
         ['OD','OS'].forEach(e => ['sph','cyl','axis','add'].forEach(f => {
             let el = document.getElementById(`c-${e}-${f}`); el.innerText = rx[e][f];
@@ -430,13 +426,12 @@
         let ts = db[cS][cP].tags; 
         if(ts.includes(t)) ts.splice(ts.indexOf(t), 1); else ts.push(t); 
         
-        // Auto-Grade 扣分邏輯
         let scores = {prelim:5, comm:5, prof:5, fluency:5, accuracy:5};
         ts.forEach(activeTag => {
             for (const [cat, tags] of Object.entries(tagsDB)) {
                 if (tags.includes(activeTag) && gradingMap[cat]) {
                     gradingMap[cat].forEach(scoreField => {
-                        scores[scoreField] = Math.max(1, scores[scoreField] - 1); // 扣 1 分，下限保底 1
+                        scores[scoreField] = Math.max(1, scores[scoreField] - 1);
                     });
                 }
             }
@@ -479,11 +474,8 @@
                     r += `  Patient ${p} (${pxIdDisplay}${d.age || '?'}${d.gender || '?'}):\n`;
                     if (d.prevHx) r += `    Prev Hx: ${d.prevHx}\n`;
                     r += `    Time: Total ${tt}m, Stud. ${st}m\n`;
-                    
-                    // 核心修復：雙重 Rx 完整匯出
                     r += `    Habitual Lens: OD ${d.lens.OD.sph}/${d.lens.OD.cyl}x${d.lens.OD.axis} | OS ${d.lens.OS.sph}/${d.lens.OS.cyl}x${d.lens.OS.axis}\n`;
                     r += `    Supervisor Rx: OD ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis} | OS ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
-                    
                     r += `    ${gradingOutput}\n`;
                     r += `    Tags: ${d.tags.join(', ') || 'None'}\n`;
                     r += `    Comments: ${d.note || 'None'}\n`;
@@ -520,7 +512,7 @@
     }
 
     function executeReset() {
-        localStorage.removeItem('optom_v14_' + currentSession);
+        localStorage.removeItem('optom_v15_' + currentSession);
         db = {};
         init();
         hideResetZone();
