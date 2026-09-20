@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V16</title>
+    <title>Clinical Supervisor Log - Optometry V17</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -84,12 +84,14 @@
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n.dec { color: var(--theme-color); font-size: 18px; font-weight: bold; }
 
+        /* General Input Textarea Styles (Unified for V17) */
+        .input-txt { width: 100%; background: #000; border: 1px solid #333; color: white; font-size: 13px; padding: 8px; border-radius: 6px; box-sizing: border-box; min-height: 50px; resize: vertical; margin-bottom: 8px;}
+        .input-txt::placeholder { color: #555; font-style: italic; }
+
         /* Errors & Severity Section */
         .scroll-area { flex-grow: 1; padding: 10px; overflow-y: auto; background: var(--bg-color); }
-        .group-title { font-size: 12px; color: var(--theme-color); font-weight: bold; margin: 15px 0 5px 0; text-transform: uppercase; }
+        .group-title { font-size: 12px; font-weight: bold; margin: 15px 0 5px 0; text-transform: uppercase; }
         .err-block { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
-        .err-txt { width: 100%; background: #000; border: 1px solid #333; color: white; font-size: 13px; padding: 8px; border-radius: 6px; box-sizing: border-box; min-height: 50px; resize: vertical; margin-bottom: 8px;}
-        .err-txt::placeholder { color: #555; font-style: italic; }
         .sev-row { display: flex; gap: 5px; }
         .sev-btn { flex: 1; padding: 6px 0; background: #1a1a1a; border: 1px solid #444; color: var(--text-muted); font-size: 11px; font-weight: bold; border-radius: 4px; }
         .sev-btn.active.mild { background: #5c4000; color: #ffb700; border-color: #ffb700; }
@@ -150,7 +152,6 @@
             <button class="m-btn active" style="flex: 0 0 75px; margin: 0; padding: 0; font-size: 12px;" onclick="setNewCase()">New Case</button>
         </div>
 
-        <!-- 全新時間輸入區：點擊標籤抓現在時間，點擊數字可手動輸入 -->
         <div class="timer-grid">
             <div class="t-btn" id="t-start">
                 <span class="t-lbl" onclick="logTime('start')">Case Start (Tap)</span>
@@ -175,7 +176,6 @@
             <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
         </div>
         
-        <!-- Lens 多副擴充區 -->
         <div class="lens-subnav" id="lens-subnav"></div>
 
         <div class="rx-matrix">
@@ -204,18 +204,24 @@
         </div>
 
         <div class="scroll-area">
-            <div class="group-title" style="color: #ff9f0a; font-size: 13px;">⚠️ Clinical Errors & Deductions</div>
+            
+            <!-- 新增: Supervisor 專屬臨床紀錄區 -->
+            <div class="group-title" style="color: #0a84ff;">👁️ My Clinical Observations</div>
+            <textarea class="input-txt" id="txt-my-obs" placeholder="記錄你自己的臨床檢查結果，方便與學生的紀錄進行對比（此欄不影響評分）..." oninput="updMyObs(this.value)"></textarea>
+
+            <div class="group-title" style="color: #ff9f0a; margin-top: 20px;">⚠️ Clinical Errors & Deductions</div>
             <div id="errors-container-main"></div>
             
             <div class="footer-section">
-                <div class="group-title" style="color: #32d74b; font-size: 13px;">📊 Grading (Scale 1-9, Base 8, Fail ≤4)</div>
+                <div class="group-title" style="color: #32d74b;">📊 Grading (Scale 1-9, Base 8, Fail ≤4)</div>
                 <div class="score-row"><div class="score-label">Preliminary</div><div class="score-btns" id="sc-prelim"></div></div>
                 <div class="score-row"><div class="score-label">Communication</div><div class="score-btns" id="sc-comm"></div></div>
                 <div class="score-row"><div class="score-label">Proficiency</div><div class="score-btns" id="sc-prof"></div></div>
                 <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
                 <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
                 
-                <textarea id="txt-note" style="min-height: 80px;" placeholder="Additional overall comments..."></textarea>
+                <!-- 統一使用 input-txt 樣式 -->
+                <textarea class="input-txt" id="txt-note" style="min-height: 80px;" placeholder="Additional overall comments..."></textarea>
                 
                 <button class="btn-sum" onclick="genSum()">Copy AI Summary</button>
                 <button class="btn-sum" style="background: #3a3a3c; color: var(--accent-red); margin-top: 10px;" onclick="executeReset()">Reset Session</button>
@@ -229,7 +235,6 @@
     let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph', currentLensIdx = 0;
     let db = {};
     
-    // Master List (V16) - Used as placeholders
     const errDefs = {
         '1. History & Workflow': { ph: 'e.g., Inefficient Workflow, Missed Chief Complaint, Incomplete Glauc Risks...', map: ['comm', 'fluency'] },
         '2. Preliminary Tests': { ph: 'e.g., 3-Sec Rule Violation, Incorrect Target, Confrontation Errors...', map: ['prelim'] },
@@ -243,7 +248,7 @@
     function bRx() { return {sph:'+',cyl:'-',axis:'',add:'+'}; }
     
     function init() {
-        db = JSON.parse(localStorage.getItem('optom_v16_' + currentSession)) || {};
+        db = JSON.parse(localStorage.getItem('optom_v17_' + currentSession)) || {};
         if (!db.settings) db.settings = { names: {1: '', 2: '', 3: '', 4: ''}, groups: {1: '', 2: '', 3: '', 4: ''}, showS4: false };
 
         for(let s=1;s<=4;s++) { 
@@ -253,13 +258,14 @@
                     db[s][p] = { 
                         pxId: '', age:'', gender:'', prevHx:'', noShow: false, 
                         times:{start:null,check:null,end:null}, 
-                        lenses: [ {OD:bRx(), OS:bRx()} ], // 支援多副眼鏡
+                        lenses: [ {OD:bRx(), OS:bRx()} ],
                         rx:{OD:bRx(),OS:bRx()}, 
-                        errors: {}, manualScores: {}, note:''
+                        errors: {}, manualScores: {}, note:'', myObs: '' // 初始化新增 myObs
                     };
-                    // 初始化 errors
                     for(let cat in errDefs) db[s][p].errors[cat] = { text:'', sev: 0 };
                 }
+                // 兼容升級: 如果舊資料沒有 myObs 屬性，補上它
+                if(db[s][p].myObs === undefined) db[s][p].myObs = '';
             } 
         }
         
@@ -274,8 +280,8 @@
             let safeId = cat.replace(/[^a-zA-Z0-9]/g, '');
             html += `
             <div class="err-block">
-                <div class="group-title">${cat}</div>
-                <textarea class="err-txt" id="err-txt-${safeId}" placeholder="${errDefs[cat].ph}" oninput="updErrTxt('${cat}', this.value)"></textarea>
+                <div class="group-title" style="color: var(--theme-color); margin-top: 0;">${cat}</div>
+                <textarea class="input-txt" id="err-txt-${safeId}" placeholder="${errDefs[cat].ph}" oninput="updErrTxt('${cat}', this.value)"></textarea>
                 <div class="sev-row" id="sev-row-${safeId}">
                     <button class="sev-btn mild" onclick="setSev('${cat}', 1)">Mild -1</button>
                     <button class="sev-btn mod" onclick="setSev('${cat}', 2)">Mod -2</button>
@@ -295,7 +301,7 @@
         });
     }
 
-    function save() { localStorage.setItem('optom_v16_' + currentSession, JSON.stringify(db)); }
+    function save() { localStorage.setItem('optom_v17_' + currentSession, JSON.stringify(db)); }
 
     function setSession(sess) {
         currentSession = sess;
@@ -307,17 +313,16 @@
         init();
     }
 
-    // 計算自動評分
     function getCalcScore(d, field) {
         if (d.manualScores[field]) return { val: d.manualScores[field], isManual: true };
-        let score = 8; // Default 8
+        let score = 8;
         let isFail = false;
         
         for (let cat in d.errors) {
             let sev = d.errors[cat].sev;
             if (sev > 0 && errDefs[cat].map.includes(field)) {
                 if (sev === 4) isFail = true;
-                else score -= sev; // Mild=1, Mod=2, Sev=3
+                else score -= sev; 
             }
         }
         if (isFail) return { val: 4, isManual: false };
@@ -345,7 +350,6 @@
         bNs.className = 'btn-noshow ' + (d.noShow?'active':'');
         bNs.innerText = d.noShow ? '🚫 Patient marked as No Show (Tap to undo)' : '🚫 Mark as No Show';
 
-        // 渲染時間輸入
         ['start','check','end'].forEach(k => {
             let input = document.getElementById('v-'+k);
             if(d.times[k]) {
@@ -354,7 +358,6 @@
             } else { input.value = ''; }
         });
 
-        // 渲染 Lens Subnav
         let subnav = document.getElementById('lens-subnav');
         if (cM === 'lens') {
             subnav.style.display = 'flex';
@@ -374,7 +377,8 @@
             el.className = 'rx-cell ' + (e==aE && f==aF?'active ':'') + (rx[e][f].includes('-')?'val-minus':'val-plus');
         }));
 
-        // 渲染 Errors & Severities
+        document.getElementById('txt-my-obs').value = d.myObs || ''; // 渲染我的臨床觀察
+
         for (let cat in errDefs) {
             let safeId = cat.replace(/[^a-zA-Z0-9]/g, '');
             document.getElementById(`err-txt-${safeId}`).value = d.errors[cat].text;
@@ -383,7 +387,6 @@
             btns.forEach((b, i) => b.classList.toggle('active', sev === i+1));
         }
 
-        // 渲染 Scores
         ['prelim','comm','prof','fluency','accuracy'].forEach(id => {
             let res = getCalcScore(d, id);
             let btns = document.querySelectorAll(`#sc-${id} .s-btn`);
@@ -428,16 +431,16 @@
     function tglSign() { if(aF!='sph') return; let v = cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]:db[cS][cP].rx[aE][aF]; let nv = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]=nv : db[cS][cP].rx[aE][aF]=nv; save(); render(); }
     function clr() { let nv = aF=='cyl'?'-':(aF=='axis'?'':'+'); cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]=nv : db[cS][cP].rx[aE][aF]=nv; save(); render(); }
     
+    function updMyObs(val) { db[cS][cP].myObs = val; save(); } // 更新我的觀察
     function updErrTxt(cat, val) { db[cS][cP].errors[cat].text = val; save(); }
     function setSev(cat, lvl) { 
         db[cS][cP].errors[cat].sev = db[cS][cP].errors[cat].sev === lvl ? 0 : lvl; 
-        // 重置受影響項目的手動分數，交回給 Auto 計算
         errDefs[cat].map.forEach(field => { delete db[cS][cP].manualScores[field]; });
         save(); render(); 
     }
     
     function setManualSc(id, n) { 
-        if (db[cS][cP].manualScores[id] === n) delete db[cS][cP].manualScores[id]; // Toggle off
+        if (db[cS][cP].manualScores[id] === n) delete db[cS][cP].manualScores[id]; 
         else db[cS][cP].manualScores[id] = n; 
         save(); render(); 
     }
@@ -468,6 +471,11 @@
                     }
                     r += `    Supervisor Rx: OD ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis} | OS ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
                     
+                    // 如果有紀錄 Supervisor Observations，則加入總結中
+                    if (d.myObs && d.myObs.trim() !== '') {
+                        r += `    Supervisor Observations: ${d.myObs}\n`;
+                    }
+
                     let sPre=getCalcScore(d,'prelim').val, sCom=getCalcScore(d,'comm').val, sPro=getCalcScore(d,'prof').val, sFlu=getCalcScore(d,'fluency').val, sAcc=getCalcScore(d,'accuracy').val;
                     r += `    Grading: Prelim(${sPre}), Comm(${sCom}), Prof(${sPro}), Fluen(${sFlu}), Accu(${sAcc})\n`;
                     
@@ -490,7 +498,7 @@
 
     function executeReset() {
         if(confirm(`⚠️ 確認永久清除 ${currentSession} Session 所有資料？`)){
-            localStorage.removeItem('optom_v16_' + currentSession); init(); setS(1);
+            localStorage.removeItem('optom_v17_' + currentSession); init(); setS(1);
         }
     }
 
