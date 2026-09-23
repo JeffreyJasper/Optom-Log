@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clinical Supervisor Log - Optometry V17</title>
+    <title>Clinical Supervisor Log - Optometry V17 (with Email)</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -84,7 +84,7 @@
         .btn-n { background: #2c2c2e; color: white; border: none; border-radius: 8px; height: 50px; font-size: 22px; font-weight: 500; }
         .btn-n.dec { color: var(--theme-color); font-size: 18px; font-weight: bold; }
 
-        /* General Input Textarea Styles (Unified for V17) */
+        /* General Input Textarea Styles */
         .input-txt { width: 100%; background: #000; border: 1px solid #333; color: white; font-size: 13px; padding: 8px; border-radius: 6px; box-sizing: border-box; min-height: 50px; resize: vertical; margin-bottom: 8px;}
         .input-txt::placeholder { color: #555; font-style: italic; }
 
@@ -99,7 +99,7 @@
         .sev-btn.active.sev { background: #5a0000; color: #ff3b3b; border-color: #ff3b3b; }
         .sev-btn.active.unsafe { background: #ff0000; color: white; border-color: #ff0000; }
 
-        /* Scoring */
+        /* Scoring & Buttons */
         .footer-section { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border); margin-bottom: 40px; }
         .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .score-label { font-size: 12px; font-weight: bold; width: 90px; }
@@ -108,7 +108,7 @@
         .s-btn.active-auto { background: #1a3a5a; color: #64b5f6; border-color: #64b5f6; }
         .s-btn.active-manual { background: var(--theme-color); color: white; border-color: var(--theme-color); }
 
-        .btn-sum { width: 100%; background: var(--theme-color); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; margin-top: 15px; font-size: 15px; text-transform: uppercase;}
+        .btn-sum { width: 100%; background: var(--theme-color); color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 15px; text-transform: uppercase;}
     </style>
 </head>
 <body data-student="1">
@@ -205,9 +205,8 @@
 
         <div class="scroll-area">
             
-            <!-- 新增: Supervisor 專屬臨床紀錄區 -->
             <div class="group-title" style="color: #0a84ff;">👁️ My Clinical Observations</div>
-            <textarea class="input-txt" id="txt-my-obs" placeholder="My clinical observation; compare with student result（No effect on grading）..." oninput="updMyObs(this.value)"></textarea>
+            <textarea class="input-txt" id="txt-my-obs" placeholder="記錄你自己的臨床檢查結果，方便與學生的紀錄進行對比（此欄不影響評分）..." oninput="updMyObs(this.value)"></textarea>
 
             <div class="group-title" style="color: #ff9f0a; margin-top: 20px;">⚠️ Clinical Errors & Deductions</div>
             <div id="errors-container-main"></div>
@@ -220,11 +219,15 @@
                 <div class="score-row"><div class="score-label">Fluency</div><div class="score-btns" id="sc-fluency"></div></div>
                 <div class="score-row"><div class="score-label">Accuracy</div><div class="score-btns" id="sc-accuracy"></div></div>
                 
-                <!-- 統一使用 input-txt 樣式 -->
                 <textarea class="input-txt" id="txt-note" style="min-height: 80px;" placeholder="Additional overall comments..."></textarea>
                 
-                <button class="btn-sum" onclick="genSum()">Copy AI Summary</button>
-                <button class="btn-sum" style="background: #3a3a3c; color: var(--accent-red); margin-top: 10px;" onclick="executeReset()">Reset Session</button>
+                <!-- 新增：並排的 Copy 與 Email 按鈕 -->
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-sum" style="flex: 1;" onclick="genSum()">Copy AI Summary</button>
+                    <button class="btn-sum" style="flex: 1; background: #007aff;" onclick="emailSum()">📧 Email</button>
+                </div>
+                
+                <button class="btn-sum" style="background: #3a3a3c; color: var(--accent-red); margin-top: 10px; width: 100%;" onclick="executeReset()">Reset Session</button>
             </div>
         </div>
     </div>
@@ -260,11 +263,10 @@
                         times:{start:null,check:null,end:null}, 
                         lenses: [ {OD:bRx(), OS:bRx()} ],
                         rx:{OD:bRx(),OS:bRx()}, 
-                        errors: {}, manualScores: {}, note:'', myObs: '' // 初始化新增 myObs
+                        errors: {}, manualScores: {}, note:'', myObs: ''
                     };
                     for(let cat in errDefs) db[s][p].errors[cat] = { text:'', sev: 0 };
                 }
-                // 兼容升級: 如果舊資料沒有 myObs 屬性，補上它
                 if(db[s][p].myObs === undefined) db[s][p].myObs = '';
             } 
         }
@@ -377,7 +379,7 @@
             el.className = 'rx-cell ' + (e==aE && f==aF?'active ':'') + (rx[e][f].includes('-')?'val-minus':'val-plus');
         }));
 
-        document.getElementById('txt-my-obs').value = d.myObs || ''; // 渲染我的臨床觀察
+        document.getElementById('txt-my-obs').value = d.myObs || ''; 
 
         for (let cat in errDefs) {
             let safeId = cat.replace(/[^a-zA-Z0-9]/g, '');
@@ -431,7 +433,7 @@
     function tglSign() { if(aF!='sph') return; let v = cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]:db[cS][cP].rx[aE][aF]; let nv = v.startsWith('+')?'-'+v.substring(1):'+'+v.substring(1); cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]=nv : db[cS][cP].rx[aE][aF]=nv; save(); render(); }
     function clr() { let nv = aF=='cyl'?'-':(aF=='axis'?'':'+'); cM==='lens'?db[cS][cP].lenses[currentLensIdx][aE][aF]=nv : db[cS][cP].rx[aE][aF]=nv; save(); render(); }
     
-    function updMyObs(val) { db[cS][cP].myObs = val; save(); } // 更新我的觀察
+    function updMyObs(val) { db[cS][cP].myObs = val; save(); } 
     function updErrTxt(cat, val) { db[cS][cP].errors[cat].text = val; save(); }
     function setSev(cat, lvl) { 
         db[cS][cP].errors[cat].sev = db[cS][cP].errors[cat].sev === lvl ? 0 : lvl; 
@@ -447,7 +449,10 @@
 
     document.getElementById('txt-note').oninput = (e) => { db[cS][cP].note = e.target.value; save(); };
 
-    function genSum() {
+    // ==========================================
+    // 獨立出來的文字生成邏輯 (Copy 與 Email 共用)
+    // ==========================================
+    function generateReportText() {
         let r = `=== Clinical Supervision Summary (${currentSession} Session) ===\n`;
 
         for(let s=1;s<=4;s++){
@@ -459,6 +464,7 @@
                 let d = db[s][p];
                 if (d.noShow) { r += `  Patient ${p}:\n    *** NO SHOW ***\n`; continue; }
 
+                // 保留 V17 的嚴格判定機制：必須有 Start Time 才會匯出
                 if(d.times.start){
                     let pxIdDisplay = d.pxId ? `ID: ${d.pxId}, ` : '';
                     r += `  Patient ${p} (${pxIdDisplay}${d.age || '?'}${d.gender || '?'}):\n`;
@@ -471,7 +477,6 @@
                     }
                     r += `    Supervisor Rx: OD ${d.rx.OD.sph}/${d.rx.OD.cyl}x${d.rx.OD.axis} | OS ${d.rx.OS.sph}/${d.rx.OS.cyl}x${d.rx.OS.axis}\n`;
                     
-                    // 如果有紀錄 Supervisor Observations，則加入總結中
                     if (d.myObs && d.myObs.trim() !== '') {
                         r += `    Supervisor Observations: ${d.myObs}\n`;
                     }
@@ -493,7 +498,20 @@
                 }
             }
         }
-        navigator.clipboard.writeText(r); alert("AI Summary copied to clipboard!");
+        return r;
+    }
+
+    function genSum() {
+        let text = generateReportText();
+        navigator.clipboard.writeText(text); 
+        alert("AI Summary copied to clipboard!");
+    }
+
+    function emailSum() {
+        let text = generateReportText();
+        let subject = encodeURIComponent(`Clinical Log Summary - ${currentSession} Session`);
+        let body = encodeURIComponent(text);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
     function executeReset() {
