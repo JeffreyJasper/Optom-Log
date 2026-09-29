@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V18</title>
+<title>Clinical Supervisor Log V20</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -38,7 +38,6 @@ button{font-family:inherit;cursor:pointer}
 .inp{background:#000;border:1px solid var(--border);color:#fff;padding:10px;border-radius:6px;flex:1;font-size:15px;min-width:0}
 .gbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:10px 14px;border-radius:6px;font-size:15px}
 .gbtn.active{background:var(--theme);color:#fff;border-color:var(--theme)}
-.reveal{background:#2c2c2e;color:#fff;border:1px solid #555;border-radius:6px;padding:0 12px;font-size:13px;user-select:none;-webkit-user-select:none;touch-action:none}
 .codeline{font-size:12px;color:var(--muted);margin:-2px 0 8px;word-break:break-all}
 .timers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
 .tbtn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px;text-align:center}
@@ -138,8 +137,7 @@ button{font-family:inherit;cursor:pointer}
       <input type="text" id="s-group" class="inp" style="max-width:110px" placeholder="Group (N1)" autocomplete="off" oninput="updateStudentInfo()">
     </div>
     <div class="row">
-      <input type="password" id="p-id" class="inp" style="flex:1.5" placeholder="Patient ID (stored on this device only)" autocomplete="off" oninput="updateInfo()">
-      <button class="reveal" id="btn-reveal">👁 Hold</button>
+      <input type="text" id="p-id" class="inp" placeholder="Patient ID" autocomplete="off" autocapitalize="characters" oninput="updateInfo()">
     </div>
     <div class="codeline" id="codeline"></div>
     <div class="row">
@@ -209,22 +207,20 @@ button{font-family:inherit;cursor:pointer}
 <div class="modal" id="modal"><div class="mbox">
   <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">⚙️ Settings</b><button class="small-btn" onclick="closeSettings()">Close ✕</button></div>
 
-  <h3>🔐 Patient ID 代號密鑰</h3>
-  <p>輸入 4–10 位數字。匯出時 Patient ID 會按此密鑰轉成代號（每個位置使用不同偏移）。密鑰只存於本機瀏覽器，不在程式碼內；未設定時匯出不會顯示任何 ID。此方法屬於假名化／掩碼，並非強加密，請勿把密鑰寫入 GitHub。</p>
-  <input type="password" id="set-key" class="inp" style="width:100%" inputmode="numeric" placeholder="例如 4 位至 10 位數字" autocomplete="off">
-  <div class="row" style="margin-top:8px"><button class="small-btn" onclick="saveKey()">Save key</button><button class="small-btn" onclick="previewKey()">Test: 12345 → ?</button></div>
+  <h3>🔒 匯出時 Patient ID 最小化</h3>
+  <p>App 內顯示並保存完整 Patient ID；只有匯出摘要（Copy／Share／Download／Email）時，才只顯示末段號碼（最多末 4 位；ID 較短時，顯示不多於一半），其餘以 * 遮蔽。例如 A1234567 → ****4567。</p>
 
   <h3>📝 匯出摘要開頭指示（給 Gemini）</h3>
   <textarea class="txt" id="set-prompt" style="min-height:110px"></textarea>
   <label style="font-size:13px;display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="set-hx"> 匯出時包含 Previous Hx</label>
-  <button class="small-btn" onclick="savePrompt()">Save</button>
+  <div class="row"><button class="small-btn" onclick="savePrompt()">Save</button><button class="small-btn" onclick="resetPrompt()">Restore default text</button></div>
 
   <h3>🔎 以 Case Code 跳轉</h3>
   <p>貼上 Gemini 回饋中的 Case Code（如 0929-AM-S1-P2），自動跳到該學生及病人。年份沿用目前選取的日期。</p>
   <div class="row"><input type="text" id="jump-in" class="inp" placeholder="0929-AM-S1-P2" autocomplete="off"><button class="small-btn" onclick="jumpTo()">Go</button></div>
 
   <h3>💾 備份與儲存記錄</h3>
-  <p>備份檔含有原始 Patient ID（不含密鑰）。請只存放在你的個人裝置或個人電郵，切勿上傳到 GitHub。</p>
+  <p>備份檔含有完整的原始 Patient ID。請只存放在你的個人裝置或個人電郵，切勿上傳到 GitHub。</p>
   <div class="row"><button class="small-btn" onclick="exportBackup()">Export backup (.json)</button><button class="small-btn" onclick="$('imp-file').click()">Import backup</button></div>
   <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
   <div id="stored-list"></div>
@@ -238,7 +234,7 @@ const pad = n => String(n).padStart(2, '0');
 const NS = 4, NP = 2, PFX = 'optom_v18_';
 const DOMAINS = ['prelim', 'comm', 'prof', 'fluency', 'accuracy'];
 const DLABEL = {prelim:'Preliminary', comm:'Communication', prof:'Proficiency', fluency:'Fluency', accuracy:'Accuracy'};
-const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 已轉為代號）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的繁體中文回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
+const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 只顯示末段號碼）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的繁體中文回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
 
 const errDefs = {
   '1. History & Workflow': {ph:'e.g., Inefficient workflow, missed chief complaint, incomplete glaucoma risks...', map:['comm','fluency']},
@@ -281,7 +277,7 @@ function normPatient(o) {
 function loadSettings() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(PFX + 'settings')); } catch (e) {}
-  const base = {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, key:'', prompt:DEFAULT_PROMPT, inclHx:true};
+  const base = {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, prompt:DEFAULT_PROMPT, inclHx:true};
   if (s && typeof s === 'object') {
     Object.keys(base).forEach(k => { if (s[k] !== undefined) base[k] = s[k]; });
     base.names = Object.assign({1:'',2:'',3:'',4:''}, s.names || {});
@@ -308,18 +304,11 @@ function toast(msg) {
 }
 
 function caseCode(s, p) { return curDate.slice(5, 7) + curDate.slice(8, 10) + '-' + curSess + '-S' + s + '-P' + p; }
-function keyDigits() { return (settings.key || '').replace(/\D/g, '').split('').map(Number); }
-function encodeId(raw, keyStr) {
-  const k = keyStr !== undefined ? keyStr.replace(/\D/g, '').split('').map(Number) : keyDigits();
-  if (!k.length || !raw) return null;
-  let out = '', i = 0;
-  for (const ch of String(raw).trim()) {
-    const sh = k[i % k.length]; i++;
-    if (/[0-9]/.test(ch)) out += 'abcdefghij'[(Number(ch) + sh) % 10];
-    else if (/[A-Za-z]/.test(ch)) { const b = ch <= 'Z' ? 65 : 97; out += String.fromCharCode((ch.charCodeAt(0) - b + sh) % 26 + b); }
-    else out += ch;
-  }
-  return out;
+function maskId(raw) {
+  const s = String(raw || '').replace(/\s+/g, '');
+  if (!s) return '';
+  const n = Math.min(4, Math.floor(s.length / 2));
+  return '*'.repeat(s.length - n) + s.slice(s.length - n);
 }
 
 function init() {
@@ -343,15 +332,6 @@ function init() {
       '</div><button class="s-reset" id="rs-' + id + '" onclick="resetSc(\'' + id + '\')" aria-label="Reset to auto">↺</button></div>';
   });
   $('score-box').innerHTML = s;
-
-  const rv = $('btn-reveal');
-  const show = () => { $('p-id').type = 'text'; };
-  const hide = () => { $('p-id').type = 'password'; };
-  rv.addEventListener('pointerdown', show);
-  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => rv.addEventListener(ev, hide));
-  document.addEventListener('visibilitychange', hide);
-  $('p-id').addEventListener('blur', hide);
-  rv.addEventListener('contextmenu', ev => ev.preventDefault());
 
   if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
   loadDay();
@@ -429,7 +409,7 @@ function render() {
     b.classList.toggle('active', p === cP);
   }
   $('s-name').value = settings.names[cS]; $('s-group').value = settings.groups[cS];
-  $('p-id').value = d.pxId; $('p-id').type = 'password'; $('p-age').value = d.age;
+  $('p-id').value = d.pxId; $('p-age').value = d.age;
   $('g-M').className = 'gbtn' + (d.gender === 'M' ? ' active' : '');
   $('g-F').className = 'gbtn' + (d.gender === 'F' ? ' active' : '');
   $('txt-prev-hx').value = d.prevHx;
@@ -481,15 +461,14 @@ function renderDur(d) {
   $('dur').textContent = parts.join(' · ');
 }
 function renderCodeLine(d) {
-  const enc = encodeId(d.pxId);
-  $('codeline').textContent = 'Case Code: ' + caseCode(cS, cP) + ' · Coded ID: ' + (d.pxId ? (enc || '(no key set)') : '—');
+  $('codeline').textContent = 'Case Code: ' + caseCode(cS, cP) + (d.pxId ? ' · 匯出顯示: ' + maskId(d.pxId) : '');
   const ov = overall(d);
   const nm = settings.names[cS] || ('S ' + cS);
   const b = $('banner');
   b.className = 'banner' + (ov.fails.length && (hasData(d) && !d.noShow) ? ' fail' : '');
   b.textContent = '📝 ' + nm + ' ➔ Patient ' + cP + ' · ' + (d.age || '?') + (d.gender || '?');
   const sm = document.createElement('small');
-  sm.textContent = caseCode(cS, cP) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
+  sm.textContent = (d.pxId ? 'ID ' + d.pxId + ' · ' : '') + caseCode(cS, cP) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
   b.appendChild(sm);
 }
 function renderScores(d) {
@@ -625,8 +604,8 @@ function generateReport() {
       entered++;
       if (d.noShow) { ns++; lines.push('  Patient ' + p + ' (' + cc + '): *** NO SHOW ***'); continue; }
       if (d.done) done++;
-      const enc = d.pxId ? (encodeId(d.pxId) || '(key not set)') : '—';
-      lines.push('  Patient ' + p + ' (Case Code: ' + cc + ' | Coded ID: ' + enc + ' | ' + (d.age || '?') + (d.gender || '?') + '):');
+      const idTxt = d.pxId ? maskId(d.pxId) : '—';
+      lines.push('  Patient ' + p + ' (Case Code: ' + cc + ' | ID: ' + idTxt + ' | ' + (d.age || '?') + (d.gender || '?') + '):');
       const tm = ['start', 'check', 'end'].map((k, i) => ['Start', 'Dilation', 'Discharge'][i] + ' ' + (fmtT(d.times[k]) || '—')).join(' | ');
       const tot = minsBetween(d.times.start, d.times.end);
       lines.push('    Times: ' + tm + (tot !== null ? ' | Total ' + tot + ' min' : ''));
@@ -660,10 +639,6 @@ function generateReport() {
   tally.forEach(t => lines.push(t));
   return lines.join('\n');
 }
-function preExport() {
-  if (!settings.key) return confirm('尚未設定 Patient ID 密鑰。匯出摘要只會包含 Case Code，不會顯示任何 ID。繼續？');
-  return true;
-}
 async function copyText(t) {
   try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return true; } } catch (e) {}
   try {
@@ -673,12 +648,10 @@ async function copyText(t) {
   } catch (e) { return false; }
 }
 async function doCopy() {
-  if (!preExport()) return;
   const ok = await copyText(generateReport());
   toast(ok ? '✓ 已複製摘要' : '⚠ 複製失敗，請改用 Download 或 Share');
 }
 async function doShare() {
-  if (!preExport()) return;
   const t = generateReport();
   if (navigator.share) { try { await navigator.share({title:'Clinical Log ' + curDate + ' ' + curSess, text:t}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   const ok = await copyText(t);
@@ -691,38 +664,28 @@ function downloadBlob(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 function doDownload() {
-  if (!preExport()) return;
   downloadBlob('ClinicalLog_' + curDate + '_' + curSess + '.txt', generateReport(), 'text/plain');
   toast('✓ 已下載 .txt');
 }
 function doEmail() {
-  if (!preExport()) return;
   const t = generateReport();
   if (t.length > 1800 && !confirm('摘要較長（' + t.length + ' 字），部分郵件程式可能截斷內容。建議改用 Copy / Share / Download。仍要開啟郵件？')) return;
   window.location.href = 'mailto:?subject=' + encodeURIComponent('Clinical Log ' + curDate + ' ' + curSess) + '&body=' + encodeURIComponent(t);
 }
 function executeReset() {
-  if (!confirm('永久清除 ' + curDate + ' ' + curSess + ' 的所有資料？系統會先自動下載備份。')) return;
-  exportBackup(true);
+  if (!confirm('確定永久清除 ' + curDate + ' ' + curSess + ' 的所有資料？')) return;
+  if (confirm('清除前是否先下載備份到本機？\n確定 = 先下載備份\n取消 = 不備份，直接清除')) exportBackup(true);
   localStorage.removeItem(dayKey());
   loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); toast('已清除');
 }
 
 function openSettings() {
-  $('set-key').value = settings.key || ''; $('set-prompt').value = settings.prompt || ''; $('set-hx').checked = !!settings.inclHx;
+  $('set-prompt').value = settings.prompt || ''; $('set-hx').checked = !!settings.inclHx;
   renderStored(); $('modal').classList.add('show');
 }
 function closeSettings() { $('modal').classList.remove('show'); }
-function saveKey() {
-  const k = $('set-key').value.replace(/\D/g, '');
-  if (k && (k.length < 4 || k.length > 10)) { toast('密鑰需為 4–10 位數字'); return; }
-  settings.key = k; saveSettings(); render(); toast(k ? '✓ 密鑰已儲存' : '已清除密鑰');
-}
-function previewKey() {
-  const k = $('set-key').value.replace(/\D/g, '');
-  toast(k.length >= 4 ? '12345 → ' + encodeId('12345', k) : '請先輸入 4–10 位數字');
-}
 function savePrompt() { settings.prompt = $('set-prompt').value; settings.inclHx = $('set-hx').checked; saveSettings(); toast('✓ 已儲存'); }
+function resetPrompt() { $('set-prompt').value = DEFAULT_PROMPT; settings.prompt = DEFAULT_PROMPT; saveSettings(); toast('已還原預設文字'); }
 function storedKeys() {
   const ks = [];
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^optom_v18_day_\d{8}_(AM|PM)$/.test(k)) ks.push(k); }
@@ -752,11 +715,10 @@ function deleteAll() {
 }
 function exportBackup(silent) {
   const days = {};
-  db && save();
+  save();
   storedKeys().forEach(k => { try { days[k] = JSON.parse(localStorage.getItem(k)); } catch (e) {} });
-  const s = Object.assign({}, settings); delete s.key;
-  downloadBlob('ClinicalLog_backup_' + curDate + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), settings:s, days:days}), 'application/json');
-  if (!silent) toast('✓ 備份已下載（含原始 ID，請妥善保管）');
+  downloadBlob('ClinicalLog_backup_' + curDate + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), settings:{names:settings.names, groups:settings.groups}, days:days}), 'application/json');
+  if (!silent) toast('✓ 備份已下載（含完整 ID，請妥善保管）');
 }
 function importBackup(inp) {
   const f = inp.files && inp.files[0]; if (!f) return;
