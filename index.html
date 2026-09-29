@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V20</title>
+<title>Clinical Supervisor Log V21</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -198,7 +198,7 @@ button{font-family:inherit;cursor:pointer}
           <button class="btn alt" onclick="doDownload()">💾 Download .txt</button>
           <button class="btn alt" onclick="doEmail()">📧 Email</button>
         </div>
-        <button class="btn danger" style="width:100%;margin-top:10px" onclick="executeReset()">Reset this Date + Session</button>
+        <button class="btn danger" style="width:100%;margin-top:10px" onclick="executeReset()">🗑 Reset all (patients + students)</button>
       </div>
     </div>
   </div>
@@ -274,10 +274,13 @@ function normPatient(o) {
   d.manualScores = o.manualScores || {};
   return d;
 }
+function defaultSettings() {
+  return {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, prompt:DEFAULT_PROMPT, inclHx:true};
+}
 function loadSettings() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(PFX + 'settings')); } catch (e) {}
-  const base = {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, prompt:DEFAULT_PROMPT, inclHx:true};
+  const base = defaultSettings();
   if (s && typeof s === 'object') {
     Object.keys(base).forEach(k => { if (s[k] !== undefined) base[k] = s[k]; });
     base.names = Object.assign({1:'',2:'',3:'',4:''}, s.names || {});
@@ -673,10 +676,15 @@ function doEmail() {
   window.location.href = 'mailto:?subject=' + encodeURIComponent('Clinical Log ' + curDate + ' ' + curSess) + '&body=' + encodeURIComponent(t);
 }
 function executeReset() {
-  if (!confirm('確定永久清除 ' + curDate + ' ' + curSess + ' 的所有資料？')) return;
-  if (confirm('清除前是否先下載備份到本機？\n確定 = 先下載備份\n取消 = 不備份，直接清除')) exportBackup(true);
+  if (!confirm('確定重設？\n將清除：\n• ' + curDate + ' ' + curSess + ' 所有病人資料\n• 所有學生姓名及組別\n• 額外的 S4 會移除，還原為 3 位學生')) return;
+  if (confirm('重設前是否先下載備份到本機？\n確定 = 先下載備份\n取消 = 不備份，直接重設')) exportBackup(true);
   localStorage.removeItem(dayKey());
-  loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); toast('已清除');
+  const keepPrompt = settings.prompt, keepHx = settings.inclHx;
+  settings = defaultSettings();
+  settings.prompt = keepPrompt; settings.inclHx = keepHx;
+  saveSettings();
+  loadDay(); cS = 1; cP = 1; cM = 'lens'; aE = 'OD'; aF = 'sph'; lensIdx = 0;
+  render(); toast('已重設：學生姓名、病人資料及 S4 已清除');
 }
 
 function openSettings() {
