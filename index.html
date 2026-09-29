@@ -122,4 +122,673 @@ button{font-family:inherit;cursor:pointer}
       <button class="tab-btn active" id="tab-s1" onclick="setS(1)">S 1</button>
       <button class="tab-btn" id="tab-s2" onclick="setS(2)">S 2</button>
       <button class="tab-btn" id="tab-s3" onclick="setS(3)">S 3</button>
-      <button class="tab-btn" id="tab-s4" onclick="setS(4)" style="display:none">S 4</butto
+      <button class="tab-btn" id="tab-s4" onclick="setS(4)" style="display:none">S 4</button>
+      <button class="tab-btn" id="btn-add-s" onclick="addS4()" style="flex:.4">➕</button>
+    </div>
+    <div class="ptabs" id="nav-p">
+      <button class="p-btn active" id="ptab-1" onclick="setP(1)">🗂️ Patient 1</button>
+      <button class="p-btn" id="ptab-2" onclick="setP(2)">🗂️ Patient 2</button>
+    </div>
+    <div class="banner" id="banner"></div>
+  </div>
+
+  <div class="info">
+    <div class="row" style="padding-bottom:10px;border-bottom:1px dashed var(--border)">
+      <input type="text" id="s-name" class="inp" placeholder="Student name" autocomplete="off" oninput="updateStudentInfo()">
+      <input type="text" id="s-group" class="inp" style="max-width:110px" placeholder="Group (N1)" autocomplete="off" oninput="updateStudentInfo()">
+    </div>
+    <div class="row">
+      <input type="password" id="p-id" class="inp" style="flex:1.5" placeholder="Patient ID (stored on this device only)" autocomplete="off" oninput="updateInfo()">
+      <button class="reveal" id="btn-reveal">👁 Hold</button>
+    </div>
+    <div class="codeline" id="codeline"></div>
+    <div class="row">
+      <input type="number" id="p-age" class="inp" style="max-width:90px" placeholder="Age" inputmode="numeric" oninput="updateInfo()">
+      <button class="gbtn" id="g-M" onclick="setGender('M')">M</button>
+      <button class="gbtn" id="g-F" onclick="setGender('F')">F</button>
+    </div>
+    <div class="row">
+      <textarea id="txt-prev-hx" class="inp" style="height:46px;font-size:13px" placeholder="Previous Hx (no names / phone numbers / ID numbers)" oninput="updatePrevHx()"></textarea>
+      <button class="m-btn active" style="flex:0 0 80px;padding:0;font-size:13px" onclick="setNewCase()">New Case</button>
+    </div>
+    <div class="timers">
+      <div class="tbtn"><span class="tlbl" onclick="logTime('start')">Case Start (tap)</span><input type="time" class="tin" id="v-start" onchange="manualTime('start',this.value)"></div>
+      <div class="tbtn"><span class="tlbl" onclick="logTime('check')">Dilation (tap)</span><input type="time" class="tin" id="v-check" onchange="manualTime('check',this.value)"></div>
+      <div class="tbtn"><span class="tlbl" onclick="logTime('end')">Discharge (tap)</span><input type="time" class="tin" id="v-end" onchange="manualTime('end',this.value)"></div>
+    </div>
+    <div class="dur" id="dur"></div>
+    <button class="btn-wide" id="btn-noshow" onclick="toggleNoShow()">🚫 Mark as No Show</button>
+  </div>
+
+  <div id="main-zone">
+    <div class="mode">
+      <button class="m-btn active" id="btn-lens" onclick="setM('lens')">Lensometry</button>
+      <button class="m-btn" id="btn-rx" onclick="setM('rx')">Supervisor Rx</button>
+    </div>
+    <div class="lens-sub" id="lens-sub"></div>
+    <div class="rx">
+      <div class="rx-h"><div></div><div>SPH</div><div>CYL</div><div>AXIS</div><div>ADD</div></div>
+      <div class="rx-r"><div class="eye">OD</div>
+        <div class="cell" id="c-OD-sph" onclick="setF('OD','sph')"></div><div class="cell" id="c-OD-cyl" onclick="setF('OD','cyl')"></div><div class="cell" id="c-OD-axis" onclick="setF('OD','axis')"></div><div class="cell" id="c-OD-add" onclick="setF('OD','add')"></div></div>
+      <div class="rx-r"><div class="eye">OS</div>
+        <div class="cell" id="c-OS-sph" onclick="setF('OS','sph')"></div><div class="cell" id="c-OS-cyl" onclick="setF('OS','cyl')"></div><div class="cell" id="c-OS-axis" onclick="setF('OS','axis')"></div><div class="cell" id="c-OS-add" onclick="setF('OS','add')"></div></div>
+    </div>
+    <div class="rx-tools"><button class="small-btn" onclick="clearCell()">Clear this cell</button></div>
+    <div class="pad">
+      <button class="bn" onclick="inN('7')">7</button><button class="bn" onclick="inN('8')">8</button><button class="bn" onclick="inN('9')">9</button><button class="bn dec" onclick="inD('.00')">.00</button>
+      <button class="bn" onclick="inN('4')">4</button><button class="bn" onclick="inN('5')">5</button><button class="bn" onclick="inN('6')">6</button><button class="bn dec" onclick="inD('.25')">.25</button>
+      <button class="bn" onclick="inN('1')">1</button><button class="bn" onclick="inN('2')">2</button><button class="bn" onclick="inN('3')">3</button><button class="bn dec" onclick="inD('.50')">.50</button>
+      <button class="bn dec" onclick="tglSign()">+/−</button><button class="bn" onclick="inN('0')">0</button><button class="bn" onclick="back()" aria-label="Backspace">⌫</button><button class="bn dec" onclick="inD('.75')">.75</button>
+    </div>
+
+    <div class="scroll">
+      <div class="gt" style="color:#0a84ff">👁️ My Clinical Observations</div>
+      <textarea class="txt" id="txt-my-obs" placeholder="記錄你自己的臨床檢查結果，方便與學生紀錄對比（不影響評分；會包含在匯出摘要，請勿寫入姓名或電話）" oninput="updMyObs(this.value)"></textarea>
+
+      <div class="gt" style="color:#ff9f0a;margin-top:20px">⚠️ Clinical Errors &amp; Deductions</div>
+      <div id="errors-box"></div>
+
+      <div class="foot">
+        <div class="gt" style="color:#32d74b;margin-top:0">📊 Grading (1-9, Base 8, Fail ≤4)</div>
+        <div id="score-box"></div>
+        <div class="overall" id="overall"></div>
+        <textarea class="txt" id="txt-note" style="min-height:80px" placeholder="Additional overall comments..."></textarea>
+        <button class="btn-wide" id="btn-done" onclick="toggleDone()">☐ Grading not completed (tap to mark done)</button>
+        <div class="grid2">
+          <button class="btn" onclick="doCopy()">📋 Copy Summary</button>
+          <button class="btn" onclick="doShare()">📤 Share</button>
+          <button class="btn alt" onclick="doDownload()">💾 Download .txt</button>
+          <button class="btn alt" onclick="doEmail()">📧 Email</button>
+        </div>
+        <button class="btn danger" style="width:100%;margin-top:10px" onclick="executeReset()">Reset this Date + Session</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="mbox">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">⚙️ Settings</b><button class="small-btn" onclick="closeSettings()">Close ✕</button></div>
+
+  <h3>🔐 Patient ID 代號密鑰</h3>
+  <p>輸入 4–10 位數字。匯出時 Patient ID 會按此密鑰轉成代號（每個位置使用不同偏移）。密鑰只存於本機瀏覽器，不在程式碼內；未設定時匯出不會顯示任何 ID。此方法屬於假名化／掩碼，並非強加密，請勿把密鑰寫入 GitHub。</p>
+  <input type="password" id="set-key" class="inp" style="width:100%" inputmode="numeric" placeholder="例如 4 位至 10 位數字" autocomplete="off">
+  <div class="row" style="margin-top:8px"><button class="small-btn" onclick="saveKey()">Save key</button><button class="small-btn" onclick="previewKey()">Test: 12345 → ?</button></div>
+
+  <h3>📝 匯出摘要開頭指示（給 Gemini）</h3>
+  <textarea class="txt" id="set-prompt" style="min-height:110px"></textarea>
+  <label style="font-size:13px;display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="set-hx"> 匯出時包含 Previous Hx</label>
+  <button class="small-btn" onclick="savePrompt()">Save</button>
+
+  <h3>🔎 以 Case Code 跳轉</h3>
+  <p>貼上 Gemini 回饋中的 Case Code（如 0929-AM-S1-P2），自動跳到該學生及病人。年份沿用目前選取的日期。</p>
+  <div class="row"><input type="text" id="jump-in" class="inp" placeholder="0929-AM-S1-P2" autocomplete="off"><button class="small-btn" onclick="jumpTo()">Go</button></div>
+
+  <h3>💾 備份與儲存記錄</h3>
+  <p>備份檔含有原始 Patient ID（不含密鑰）。請只存放在你的個人裝置或個人電郵，切勿上傳到 GitHub。</p>
+  <div class="row"><button class="small-btn" onclick="exportBackup()">Export backup (.json)</button><button class="small-btn" onclick="$('imp-file').click()">Import backup</button></div>
+  <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
+  <div id="stored-list"></div>
+  <button class="small-btn" style="color:var(--red);margin-top:8px" onclick="deleteAll()">Delete ALL stored logs on this device</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const NS = 4, NP = 2, PFX = 'optom_v18_';
+const DOMAINS = ['prelim', 'comm', 'prof', 'fluency', 'accuracy'];
+const DLABEL = {prelim:'Preliminary', comm:'Communication', prof:'Proficiency', fluency:'Fluency', accuracy:'Accuracy'};
+const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 已轉為代號）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的繁體中文回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
+
+const errDefs = {
+  '1. History & Workflow': {ph:'e.g., Inefficient workflow, missed chief complaint, incomplete glaucoma risks...', map:['comm','fluency']},
+  '2. Preliminary Tests': {ph:'e.g., 3-sec rule violation, incorrect target, confrontation errors...', map:['prelim']},
+  '3. Refraction': {ph:'e.g., Poor accommodation control, auto-refractor reliance, over-minusing...', map:['prof','accuracy']},
+  '4. Anterior Seg & Tono': {ph:'e.g., Incorrect sequence (GAT/gonio), inaccurate van Herick, missed pathology...', map:['prof','accuracy']},
+  '5. Post Seg & Glaucoma': {ph:'e.g., Incomplete peripheral sweeps, imaging mismatch, missed disc haemorrhage...', map:['prof','accuracy']},
+  '6. Dx, Mgmt & Record': {ph:'e.g., Vague descriptions, premature Dx, delayed data entry...', map:['prof']},
+  '7. Professionalism': {ph:'e.g., Academic dishonesty, lack of preparation, unprofessional communication...', map:['comm','fluency']}
+};
+const catIds = Object.keys(errDefs);
+
+let settings = loadSettings();
+let curDate = todayStr(), curSess = 'AM', db = {};
+let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph', lensIdx = 0;
+
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function dayKey() { return PFX + 'day_' + curDate.replace(/-/g, '') + '_' + curSess; }
+function bRx() { return {sph:'+', cyl:'-', axis:'', add:'+'}; }
+function newLens() { return {type:'SPX', OD:bRx(), OS:bRx()}; }
+function newPatient() {
+  const p = {pxId:'', age:'', gender:'', prevHx:'', noShow:false, done:false,
+    times:{start:null, check:null, end:null}, lenses:[newLens()], rx:{OD:bRx(), OS:bRx()},
+    errors:{}, manualScores:{}, note:'', myObs:''};
+  catIds.forEach(c => p.errors[c] = {text:'', sev:0});
+  return p;
+}
+function normPatient(o) {
+  const d = newPatient();
+  if (!o || typeof o !== 'object') return d;
+  Object.keys(d).forEach(k => { if (o[k] !== undefined) d[k] = o[k]; });
+  d.times = Object.assign({start:null, check:null, end:null}, o.times || {});
+  d.lenses = (Array.isArray(o.lenses) && o.lenses.length ? o.lenses : [newLens()]).map(l => Object.assign(newLens(), l));
+  d.rx = Object.assign({OD:bRx(), OS:bRx()}, o.rx || {});
+  const base = newPatient().errors;
+  catIds.forEach(c => { d.errors[c] = Object.assign(base[c], (o.errors || {})[c] || {}); });
+  d.manualScores = o.manualScores || {};
+  return d;
+}
+function loadSettings() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(PFX + 'settings')); } catch (e) {}
+  const base = {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, key:'', prompt:DEFAULT_PROMPT, inclHx:true};
+  if (s && typeof s === 'object') {
+    Object.keys(base).forEach(k => { if (s[k] !== undefined) base[k] = s[k]; });
+    base.names = Object.assign({1:'',2:'',3:'',4:''}, s.names || {});
+    base.groups = Object.assign({1:'',2:'',3:'',4:''}, s.groups || {});
+  }
+  return base;
+}
+function saveSettings() {
+  try { localStorage.setItem(PFX + 'settings', JSON.stringify(settings)); } catch (e) { toast('⚠ 設定儲存失敗'); }
+}
+function loadDay() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(dayKey())); } catch (e) {}
+  db = (raw && typeof raw === 'object') ? raw : {};
+  for (let s = 1; s <= NS; s++) { db[s] = db[s] || {}; for (let p = 1; p <= NP; p++) db[s][p] = normPatient(db[s][p]); }
+}
+function save() {
+  try { localStorage.setItem(dayKey(), JSON.stringify(db)); } catch (e) { toast('⚠ 儲存失敗：儲存空間已滿或被瀏覽器禁用'); }
+}
+function P() { return db[cS][cP]; }
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function caseCode(s, p) { return curDate.slice(5, 7) + curDate.slice(8, 10) + '-' + curSess + '-S' + s + '-P' + p; }
+function keyDigits() { return (settings.key || '').replace(/\D/g, '').split('').map(Number); }
+function encodeId(raw, keyStr) {
+  const k = keyStr !== undefined ? keyStr.replace(/\D/g, '').split('').map(Number) : keyDigits();
+  if (!k.length || !raw) return null;
+  let out = '', i = 0;
+  for (const ch of String(raw).trim()) {
+    const sh = k[i % k.length]; i++;
+    if (/[0-9]/.test(ch)) out += 'abcdefghij'[(Number(ch) + sh) % 10];
+    else if (/[A-Za-z]/.test(ch)) { const b = ch <= 'Z' ? 65 : 97; out += String.fromCharCode((ch.charCodeAt(0) - b + sh) % 26 + b); }
+    else out += ch;
+  }
+  return out;
+}
+
+function init() {
+  $('sel-date').value = curDate;
+  $('sel-date').onchange = function () { if (!this.value) return; curDate = this.value; loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); };
+  let e = '';
+  catIds.forEach((cat, i) => {
+    e += '<div class="err"><div class="gt">' + cat + ' <span class="map">→ ' + errDefs[cat].map.map(m => DLABEL[m]).join(', ') + '</span></div>' +
+      '<textarea class="txt" id="err-txt-' + i + '" placeholder="' + errDefs[cat].ph + '" oninput="updErrTxt(' + i + ',this.value)"></textarea>' +
+      '<div class="sev" id="sev-' + i + '">' +
+      '<button class="sb mild" onclick="setSev(' + i + ',1)">Mild −1</button>' +
+      '<button class="sb mod" onclick="setSev(' + i + ',2)">Mod −2</button>' +
+      '<button class="sb sev3" onclick="setSev(' + i + ',3)">Sev −3</button>' +
+      '<button class="sb unsafe" onclick="setSev(' + i + ',4)">⛔ Fail</button></div></div>';
+  });
+  $('errors-box').innerHTML = e;
+  let s = '';
+  DOMAINS.forEach(id => {
+    s += '<div class="srow"><div class="slbl">' + DLABEL[id] + '</div><div class="sbtns" id="sc-' + id + '">' +
+      [1,2,3,4,5,6,7,8,9].map(n => '<button class="s-btn" onclick="setManualSc(\'' + id + '\',' + n + ')">' + n + '</button>').join('') +
+      '</div><button class="s-reset" id="rs-' + id + '" onclick="resetSc(\'' + id + '\')" aria-label="Reset to auto">↺</button></div>';
+  });
+  $('score-box').innerHTML = s;
+
+  const rv = $('btn-reveal');
+  const show = () => { $('p-id').type = 'text'; };
+  const hide = () => { $('p-id').type = 'password'; };
+  rv.addEventListener('pointerdown', show);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => rv.addEventListener(ev, hide));
+  document.addEventListener('visibilitychange', hide);
+  $('p-id').addEventListener('blur', hide);
+  rv.addEventListener('contextmenu', ev => ev.preventDefault());
+
+  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
+  loadDay();
+  render();
+}
+
+function fmtT(iso) { if (!iso) return ''; const d = new Date(iso); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function minsBetween(a, b) { if (!a || !b) return null; return Math.round((new Date(b) - new Date(a)) / 60000); }
+
+function num(v) { return /^[+-]?$/.test(v || '') ? '' : v; }
+function rxEmpty(x) { return !num(x.sph) && !num(x.cyl) && !x.axis && !num(x.add); }
+function fmtEye(x) {
+  if (rxEmpty(x)) return '—';
+  const s = num(x.sph), c = num(x.cyl), ad = num(x.add);
+  let t = s || '?';
+  if (c) t += ' / ' + c + ' x ' + (x.axis || '?');
+  if (ad) t += ' Add ' + ad;
+  return t;
+}
+
+function getCalcScore(d, field) {
+  if (d.manualScores[field]) return {val:d.manualScores[field], isManual:true};
+  let score = 8, fail = false;
+  catIds.forEach(cat => {
+    const sev = d.errors[cat].sev;
+    if (sev > 0 && errDefs[cat].map.includes(field)) { if (sev === 4) fail = true; else score -= sev; }
+  });
+  if (fail) return {val:4, isManual:false};
+  return {val:Math.max(1, Math.min(9, score)), isManual:false};
+}
+function overall(d) {
+  const sc = DOMAINS.map(k => getCalcScore(d, k).val);
+  const fails = DOMAINS.filter((k, i) => sc[i] <= 4).map(k => DLABEL[k]);
+  const avg = (sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1);
+  return {scores:sc, fails, avg};
+}
+
+function hasData(d) {
+  if (d.noShow || d.times.start || d.times.check || d.times.end || d.pxId || d.age || d.gender || d.myObs || d.note || d.done) return true;
+  if (d.prevHx && d.prevHx !== 'New case') return true;
+  if (d.lenses.some(l => !rxEmpty(l.OD) || !rxEmpty(l.OS))) return true;
+  if (!rxEmpty(d.rx.OD) || !rxEmpty(d.rx.OS)) return true;
+  if (catIds.some(c => d.errors[c].sev > 0 || d.errors[c].text.trim())) return true;
+  return Object.keys(d.manualScores).length > 0;
+}
+function checks(d) {
+  const w = [];
+  if (!d.times.start) w.push('No Case Start time recorded');
+  const chk = (x, label) => ['OD', 'OS'].forEach(e => {
+    const r = x[e], c = num(r.cyl), a = r.axis;
+    if (c && Number(c) !== 0 && !a) w.push(label + ' ' + e + ': CYL without AXIS');
+    if (a && (Number(a) < 1 || Number(a) > 180)) w.push(label + ' ' + e + ': AXIS out of 1-180');
+    if (!c && a) w.push(label + ' ' + e + ': AXIS without CYL');
+  });
+  d.lenses.forEach((l, i) => chk(l, 'Habitual Lens ' + (i + 1)));
+  chk(d.rx, 'Supervisor Rx');
+  if (rxEmpty(d.rx.OD) && rxEmpty(d.rx.OS)) w.push('Supervisor Rx empty');
+  if (!d.done) w.push('Grading not marked as completed');
+  return w;
+}
+
+function render() {
+  const d = P();
+  document.body.setAttribute('data-student', cS);
+  $('btn-AM').className = 'sess-btn' + (curSess === 'AM' ? ' active' : '');
+  $('btn-PM').className = 'sess-btn' + (curSess === 'PM' ? ' active' : '');
+  $('tab-s4').style.display = settings.showS4 ? 'block' : 'none';
+  $('btn-add-s').style.display = settings.showS4 ? 'none' : 'block';
+  for (let i = 1; i <= NS; i++) {
+    const b = $('tab-s' + i); b.textContent = '👨‍⚕️ ' + (settings.names[i] || ('S ' + i));
+    b.classList.toggle('active', i === cS);
+  }
+  for (let p = 1; p <= NP; p++) {
+    const b = $('ptab-' + p); b.textContent = '🗂️ Patient ' + p + (db[cS][p].done ? ' ✓' : '');
+    b.classList.toggle('active', p === cP);
+  }
+  $('s-name').value = settings.names[cS]; $('s-group').value = settings.groups[cS];
+  $('p-id').value = d.pxId; $('p-id').type = 'password'; $('p-age').value = d.age;
+  $('g-M').className = 'gbtn' + (d.gender === 'M' ? ' active' : '');
+  $('g-F').className = 'gbtn' + (d.gender === 'F' ? ' active' : '');
+  $('txt-prev-hx').value = d.prevHx;
+  $('main-zone').style.display = d.noShow ? 'none' : 'block';
+  const ns = $('btn-noshow'); ns.className = 'btn-wide' + (d.noShow ? ' active' : '');
+  ns.textContent = d.noShow ? '🚫 Marked as No Show (tap to undo)' : '🚫 Mark as No Show';
+  ['start', 'check', 'end'].forEach(k => { $('v-' + k).value = fmtT(d.times[k]); });
+  renderDur(d);
+  renderCodeLine(d);
+  $('btn-lens').classList.toggle('active', cM === 'lens');
+  $('btn-rx').classList.toggle('active', cM === 'rx');
+
+  const sub = $('lens-sub');
+  if (cM === 'lens') {
+    if (lensIdx >= d.lenses.length) lensIdx = 0;
+    sub.style.display = 'flex';
+    let h = '';
+    d.lenses.forEach((l, i) => { h += '<button class="l-tab' + (lensIdx === i ? ' active' : '') + '" onclick="setLensIdx(' + i + ')">Lens ' + (i + 1) + '</button>'; });
+    h += '<button class="l-tab l-add" onclick="addLens()">+ Add</button>';
+    const cur = d.lenses[lensIdx].type;
+    h += '<select class="l-sel" onchange="setLensType(this.value)" aria-label="Lens type">' +
+      ['SPX', 'CL', 'Other'].map(t => '<option' + (t === cur ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>';
+    if (d.lenses.length > 1) h += '<button class="l-tab l-add" style="color:#ff6b6b" onclick="delLens()">Delete</button>';
+    sub.innerHTML = h;
+  } else sub.style.display = 'none';
+
+  const rx = curRx();
+  ['OD', 'OS'].forEach(e => ['sph', 'cyl', 'axis', 'add'].forEach(f => {
+    const el = $('c-' + e + '-' + f), v = rx[e][f];
+    el.textContent = v;
+    el.className = 'cell' + (e === aE && f === aF ? ' active' : '') + (/^[+-]?$/.test(v) ? ' empty' : '') + (v.includes('-') ? ' minus' : ' plus');
+  }));
+  $('txt-my-obs').value = d.myObs || '';
+  catIds.forEach((cat, i) => {
+    $('err-txt-' + i).value = d.errors[cat].text;
+    const sev = d.errors[cat].sev;
+    document.querySelectorAll('#sev-' + i + ' .sb').forEach((b, j) => b.classList.toggle('active', sev === j + 1));
+  });
+  renderScores(d);
+  $('txt-note').value = d.note;
+  renderDone(d);
+}
+function renderDur(d) {
+  const a = minsBetween(d.times.start, d.times.check), b = minsBetween(d.times.check, d.times.end), t = minsBetween(d.times.start, d.times.end);
+  const parts = [];
+  if (a !== null) parts.push('Start→Dilation ' + a + ' min');
+  if (b !== null) parts.push('Dilation→Discharge ' + b + ' min');
+  if (t !== null) parts.push('Total ' + t + ' min');
+  $('dur').textContent = parts.join(' · ');
+}
+function renderCodeLine(d) {
+  const enc = encodeId(d.pxId);
+  $('codeline').textContent = 'Case Code: ' + caseCode(cS, cP) + ' · Coded ID: ' + (d.pxId ? (enc || '(no key set)') : '—');
+  const ov = overall(d);
+  const nm = settings.names[cS] || ('S ' + cS);
+  const b = $('banner');
+  b.className = 'banner' + (ov.fails.length && (hasData(d) && !d.noShow) ? ' fail' : '');
+  b.textContent = '📝 ' + nm + ' ➔ Patient ' + cP + ' · ' + (d.age || '?') + (d.gender || '?');
+  const sm = document.createElement('small');
+  sm.textContent = caseCode(cS, cP) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
+  b.appendChild(sm);
+}
+function renderScores(d) {
+  DOMAINS.forEach(id => {
+    const res = getCalcScore(d, id);
+    document.querySelectorAll('#sc-' + id + ' .s-btn').forEach((b, i) => {
+      b.className = 's-btn';
+      if (i + 1 === res.val) { b.classList.add(res.isManual ? 'manual' : 'auto'); if (res.val <= 4) b.classList.add('fail'); }
+    });
+    $('rs-' + id).classList.toggle('show', res.isManual);
+  });
+  const ov = overall(d), o = $('overall');
+  o.className = 'overall' + (ov.fails.length ? ' fail' : '');
+  o.textContent = ov.fails.length ? '⚠ FAIL RISK — domain ≤4: ' + ov.fails.join(', ') + ' (avg ' + ov.avg + ')' : '✓ No domain ≤4 (avg ' + ov.avg + ')';
+}
+function renderDone(d) {
+  const b = $('btn-done');
+  b.className = 'btn-wide' + (d.done ? ' done' : '');
+  b.textContent = d.done ? '☑ Grading completed (tap to undo)' : '☐ Grading not completed (tap to mark done)';
+}
+
+function addS4() { settings.showS4 = true; saveSettings(); render(); }
+function toggleNoShow() { P().noShow = !P().noShow; save(); render(); }
+function toggleDone() { P().done = !P().done; save(); render(); }
+function setNewCase() {
+  const d = P();
+  if (d.prevHx && d.prevHx !== 'New case' && !confirm('目前已有 Previous Hx，確定覆蓋為 “New case”？')) return;
+  d.prevHx = 'New case'; save(); render();
+}
+function updateStudentInfo() {
+  settings.names[cS] = $('s-name').value; settings.groups[cS] = $('s-group').value; saveSettings();
+  const b = $('tab-s' + cS); b.textContent = '👨‍⚕️ ' + (settings.names[cS] || ('S ' + cS));
+  renderCodeLine(P());
+}
+function updateInfo() { const d = P(); d.pxId = $('p-id').value; d.age = $('p-age').value; save(); renderCodeLine(d); }
+function updatePrevHx() { P().prevHx = $('txt-prev-hx').value; save(); }
+function setGender(g) { P().gender = P().gender === g ? '' : g; save(); render(); }
+
+function logTime(k) {
+  const d = P();
+  if (d.times[k]) { if (!confirm('清除已記錄的時間 ' + fmtT(d.times[k]) + '？')) return; d.times[k] = null; }
+  else d.times[k] = new Date().toISOString();
+  save(); render();
+}
+function manualTime(k, val) {
+  const d = P();
+  if (!val) d.times[k] = null;
+  else { const t = new Date(curDate + 'T00:00:00'); const [h, m] = val.split(':'); t.setHours(Number(h), Number(m), 0, 0); d.times[k] = t.toISOString(); }
+  save(); render();
+}
+
+function setSession(s) { curSess = s; loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); }
+function setS(s) { cS = s; lensIdx = 0; render(); }
+function setP(p) { cP = p; lensIdx = 0; render(); }
+function setM(m) { cM = m; render(); }
+function setLensIdx(i) { lensIdx = i; render(); }
+function addLens() { const d = P(); d.lenses.push(newLens()); lensIdx = d.lenses.length - 1; save(); render(); }
+function delLens() {
+  const d = P();
+  if (d.lenses.length < 2 || !confirm('刪除 Lens ' + (lensIdx + 1) + '？')) return;
+  d.lenses.splice(lensIdx, 1); lensIdx = 0; save(); render();
+}
+function setLensType(t) { P().lenses[lensIdx].type = t; save(); }
+function setF(e, f) { aE = e; aF = f; render(); }
+function curRx() { const d = P(); return cM === 'lens' ? d.lenses[lensIdx] : d.rx; }
+
+function inN(n) {
+  const r = curRx(), v = r[aE][aF];
+  if (aF === 'axis') {
+    const nv = v + n;
+    if (nv.length > 3 || parseInt(nv, 10) > 180) { toast('AXIS 範圍 1–180'); return; }
+    r[aE][aF] = nv;
+  } else {
+    const dot = v.indexOf('.');
+    if (dot >= 0) { if (v.length - dot - 1 >= 2) return; }
+    else if (v.replace(/[+-]/, '').length >= 2) return;
+    r[aE][aF] = v + n;
+  }
+  save(); render();
+}
+function inD(d) {
+  if (aF === 'axis') return;
+  const r = curRx(), v = r[aE][aF];
+  if (v.includes('.')) return;
+  r[aE][aF] = v + (/^[+-]?$/.test(v) ? '0' : '') + d;
+  save(); render();
+}
+function tglSign() {
+  if (aF === 'axis') return;
+  const r = curRx(), v = r[aE][aF];
+  r[aE][aF] = (v.startsWith('-') ? '+' : '-') + v.substring(1);
+  save(); render();
+}
+function back() {
+  const r = curRx(); let v = r[aE][aF];
+  if (aF === 'axis') v = v.slice(0, -1);
+  else if (/\.\d\d$/.test(v)) v = v.slice(0, -3);
+  else if (v.length > 1) v = v.slice(0, -1);
+  r[aE][aF] = v; save(); render();
+}
+function clearCell() { curRx()[aE][aF] = aF === 'cyl' ? '-' : (aF === 'axis' ? '' : '+'); save(); render(); }
+
+function updMyObs(v) { P().myObs = v; save(); }
+function updErrTxt(i, v) { P().errors[catIds[i]].text = v; save(); }
+function setSev(i, lvl) {
+  const e = P().errors[catIds[i]];
+  e.sev = e.sev === lvl ? 0 : lvl;
+  save(); render();
+}
+function setManualSc(id, n) {
+  const m = P().manualScores;
+  if (m[id] === n) delete m[id]; else m[id] = n;
+  save(); render();
+}
+function resetSc(id) { delete P().manualScores[id]; save(); render(); }
+$('txt-note').oninput = e => { P().note = e.target.value; save(); };
+
+function generateReport() {
+  const lines = [];
+  if (settings.prompt && settings.prompt.trim()) lines.push(settings.prompt.trim(), '');
+  lines.push('=== Clinical Supervision Summary ===');
+  lines.push('Date: ' + curDate + ' | Session: ' + curSess + ' | Generated: ' + fmtT(new Date().toISOString()));
+  const tally = [];
+  for (let s = 1; s <= NS; s++) {
+    if (s === 4 && !settings.showS4) continue;
+    const nm = settings.names[s] || ('S' + s);
+    const stu = settings.groups[s] ? nm + ' [' + settings.groups[s] + ']' : nm;
+    lines.push('', '[Student: ' + stu + ']');
+    let entered = 0, ns = 0, done = 0;
+    for (let p = 1; p <= NP; p++) {
+      const d = db[s][p], cc = caseCode(s, p);
+      if (!hasData(d)) { lines.push('  Patient ' + p + ' (' + cc + '): no data'); continue; }
+      entered++;
+      if (d.noShow) { ns++; lines.push('  Patient ' + p + ' (' + cc + '): *** NO SHOW ***'); continue; }
+      if (d.done) done++;
+      const enc = d.pxId ? (encodeId(d.pxId) || '(key not set)') : '—';
+      lines.push('  Patient ' + p + ' (Case Code: ' + cc + ' | Coded ID: ' + enc + ' | ' + (d.age || '?') + (d.gender || '?') + '):');
+      const tm = ['start', 'check', 'end'].map((k, i) => ['Start', 'Dilation', 'Discharge'][i] + ' ' + (fmtT(d.times[k]) || '—')).join(' | ');
+      const tot = minsBetween(d.times.start, d.times.end);
+      lines.push('    Times: ' + tm + (tot !== null ? ' | Total ' + tot + ' min' : ''));
+      if (settings.inclHx && d.prevHx) lines.push('    Prev Hx: ' + d.prevHx);
+      d.lenses.forEach((l, i) => {
+        if (rxEmpty(l.OD) && rxEmpty(l.OS)) return;
+        lines.push('    Habitual ' + l.type + (d.lenses.length > 1 ? ' ' + (i + 1) : '') + ': OD ' + fmtEye(l.OD) + ' | OS ' + fmtEye(l.OS));
+      });
+      lines.push('    Supervisor Rx: OD ' + fmtEye(d.rx.OD) + ' | OS ' + fmtEye(d.rx.OS));
+      if (d.myObs && d.myObs.trim()) lines.push('    Supervisor Observations: ' + d.myObs.trim());
+      const ov = overall(d);
+      const gs = DOMAINS.map(k => { const r = getCalcScore(d, k); return DLABEL[k] + '(' + r.val + (r.isManual ? ' manual' : '') + ')'; }).join(', ');
+      lines.push('    Grading: ' + gs);
+      lines.push('    Overall: ' + (ov.fails.length ? 'FAIL RISK, domain ≤4: ' + ov.fails.join(', ') : 'no domain ≤4') + ' | avg ' + ov.avg);
+      const errs = [];
+      catIds.forEach(c => {
+        const e = d.errors[c];
+        if (e.sev > 0 || e.text.trim()) {
+          const sv = ['No deduction', 'Mild -1', 'Mod -2', 'Sev -3', 'Unsafe/Fail'][e.sev];
+          errs.push(c + ' [' + sv + ']' + (e.text.trim() ? ' - ' + e.text.trim() : ''));
+        }
+      });
+      if (errs.length) { lines.push('    Errors Logged:'); errs.forEach(x => lines.push('      ' + x)); }
+      if (d.note && d.note.trim()) lines.push('    Comments: ' + d.note.trim());
+      const w = checks(d);
+      if (w.length) lines.push('    Data checks: ' + w.join('; '));
+    }
+    tally.push('S' + s + ' ' + nm + ': entered ' + entered + '/' + NP + ', no-show ' + ns + ', completed ' + done);
+  }
+  lines.push('', '--- Cross-check ---');
+  tally.forEach(t => lines.push(t));
+  return lines.join('\n');
+}
+function preExport() {
+  if (!settings.key) return confirm('尚未設定 Patient ID 密鑰。匯出摘要只會包含 Case Code，不會顯示任何 ID。繼續？');
+  return true;
+}
+async function copyText(t) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, t.length);
+    const ok = document.execCommand('copy'); ta.remove(); return ok;
+  } catch (e) { return false; }
+}
+async function doCopy() {
+  if (!preExport()) return;
+  const ok = await copyText(generateReport());
+  toast(ok ? '✓ 已複製摘要' : '⚠ 複製失敗，請改用 Download 或 Share');
+}
+async function doShare() {
+  if (!preExport()) return;
+  const t = generateReport();
+  if (navigator.share) { try { await navigator.share({title:'Clinical Log ' + curDate + ' ' + curSess, text:t}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  const ok = await copyText(t);
+  toast(ok ? '此瀏覽器不支援分享，已改為複製' : '⚠ 分享及複製均失敗');
+}
+function downloadBlob(name, text, type) {
+  const blob = new Blob([text], {type:type + ';charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function doDownload() {
+  if (!preExport()) return;
+  downloadBlob('ClinicalLog_' + curDate + '_' + curSess + '.txt', generateReport(), 'text/plain');
+  toast('✓ 已下載 .txt');
+}
+function doEmail() {
+  if (!preExport()) return;
+  const t = generateReport();
+  if (t.length > 1800 && !confirm('摘要較長（' + t.length + ' 字），部分郵件程式可能截斷內容。建議改用 Copy / Share / Download。仍要開啟郵件？')) return;
+  window.location.href = 'mailto:?subject=' + encodeURIComponent('Clinical Log ' + curDate + ' ' + curSess) + '&body=' + encodeURIComponent(t);
+}
+function executeReset() {
+  if (!confirm('永久清除 ' + curDate + ' ' + curSess + ' 的所有資料？系統會先自動下載備份。')) return;
+  exportBackup(true);
+  localStorage.removeItem(dayKey());
+  loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); toast('已清除');
+}
+
+function openSettings() {
+  $('set-key').value = settings.key || ''; $('set-prompt').value = settings.prompt || ''; $('set-hx').checked = !!settings.inclHx;
+  renderStored(); $('modal').classList.add('show');
+}
+function closeSettings() { $('modal').classList.remove('show'); }
+function saveKey() {
+  const k = $('set-key').value.replace(/\D/g, '');
+  if (k && (k.length < 4 || k.length > 10)) { toast('密鑰需為 4–10 位數字'); return; }
+  settings.key = k; saveSettings(); render(); toast(k ? '✓ 密鑰已儲存' : '已清除密鑰');
+}
+function previewKey() {
+  const k = $('set-key').value.replace(/\D/g, '');
+  toast(k.length >= 4 ? '12345 → ' + encodeId('12345', k) : '請先輸入 4–10 位數字');
+}
+function savePrompt() { settings.prompt = $('set-prompt').value; settings.inclHx = $('set-hx').checked; saveSettings(); toast('✓ 已儲存'); }
+function storedKeys() {
+  const ks = [];
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^optom_v18_day_\d{8}_(AM|PM)$/.test(k)) ks.push(k); }
+  return ks.sort().reverse();
+}
+function renderStored() {
+  const box = $('stored-list'); box.innerHTML = '';
+  const ks = storedKeys();
+  if (!ks.length) { box.textContent = '（沒有已儲存的記錄）'; return; }
+  ks.forEach(k => {
+    const m = k.match(/_(\d{4})(\d{2})(\d{2})_(AM|PM)$/);
+    const dt = m[1] + '-' + m[2] + '-' + m[3];
+    const age = Math.floor((new Date() - new Date(dt + 'T00:00:00')) / 86400000);
+    const row = document.createElement('div'); row.className = 'stored';
+    const lbl = document.createElement('span'); lbl.textContent = dt + ' ' + m[4];
+    if (age > 30) { const o = document.createElement('span'); o.className = 'old'; o.textContent = ' · ' + age + ' 日前，建議刪除'; lbl.appendChild(o); }
+    const del = document.createElement('button'); del.className = 'small-btn'; del.textContent = 'Delete';
+    del.onclick = () => { if (confirm('刪除 ' + dt + ' ' + m[4] + '？建議先匯出備份。')) { localStorage.removeItem(k); if (k === dayKey()) { loadDay(); render(); } renderStored(); } };
+    row.appendChild(lbl); row.appendChild(del); box.appendChild(row);
+  });
+}
+function deleteAll() {
+  if (!confirm('刪除此裝置上所有日誌記錄？')) return;
+  if (!confirm('再次確認：此操作無法還原。')) return;
+  storedKeys().forEach(k => localStorage.removeItem(k));
+  loadDay(); render(); renderStored(); toast('已刪除全部記錄');
+}
+function exportBackup(silent) {
+  const days = {};
+  db && save();
+  storedKeys().forEach(k => { try { days[k] = JSON.parse(localStorage.getItem(k)); } catch (e) {} });
+  const s = Object.assign({}, settings); delete s.key;
+  downloadBlob('ClinicalLog_backup_' + curDate + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), settings:s, days:days}), 'application/json');
+  if (!silent) toast('✓ 備份已下載（含原始 ID，請妥善保管）');
+}
+function importBackup(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const o = JSON.parse(rd.result);
+      if (!o || o.version !== 18 || typeof o.days !== 'object') throw new Error('bad');
+      const ks = Object.keys(o.days).filter(k => /^optom_v18_day_\d{8}_(AM|PM)$/.test(k));
+      if (!ks.length || !confirm('匯入 ' + ks.length + ' 個記錄？相同日期及時段的現有資料將被覆蓋。')) return;
+      ks.forEach(k => localStorage.setItem(k, JSON.stringify(o.days[k])));
+      if (o.settings && o.settings.names) { settings.names = Object.assign(settings.names, o.settings.names); settings.groups = Object.assign(settings.groups, o.settings.groups || {}); saveSettings(); }
+      loadDay(); render(); renderStored(); toast('✓ 匯入完成');
+    } catch (e) { toast('⚠ 檔案格式不正確'); }
+    inp.value = '';
+  };
+  rd.readAsText(f);
+}
+function jumpTo() {
+  const t = $('jump-in').value.trim().replace(/[\u2010-\u2015]/g, '-');
+  const m = t.match(/^(\d{2})(\d{2})-(AM|PM)-S(\d)-P(\d)$/i);
+  if (!m) { toast('格式應為 0929-AM-S1-P2'); return; }
+  const s = Number(m[4]), p = Number(m[5]);
+  if (s < 1 || s > NS || p < 1 || p > NP) { toast('S / P 編號超出範圍'); return; }
+  curDate = curDate.slice(0, 4) + '-' + m[1] + '-' + m[2]; curSess = m[3].toUpperCase();
+  $('sel-date').value = curDate;
+  if (s === 4) settings.showS4 = true;
+  loadDay(); cS = s; cP = p; lensIdx = 0; closeSettings(); render();
+  if (!hasData(P())) toast('注意：此日期／時段在本機沒有資料');
+}
+
+init();
+</script>
+</body>
+</html>
