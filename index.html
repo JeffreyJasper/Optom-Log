@@ -2,11 +2,11 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V23</title>
+<title>Clinical Supervisor Log V24</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -14,99 +14,107 @@ body[data-student="2"]{--theme:#32d74b;--theme-dark:#0a3814}
 body[data-student="3"]{--theme:#bf5af2;--theme-dark:#32004f}
 body[data-student="4"]{--theme:#ff9f0a;--theme-dark:#4d2e00}
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;touch-action:manipulation;font-size:14px}
-input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inherit}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;touch-action:manipulation;font-size:14px;overflow-x:hidden;width:100%}
+input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inherit;font-size:16px;max-width:100%}
 button{font-family:inherit;cursor:pointer}
-.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
-.top-bar{display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);align-items:center}
-.top-bar input[type=date]{flex:1;min-width:0;background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:9px;font-size:14px;color-scheme:dark}
-.sess-btn{flex:0 0 auto;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
+.app{width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
+.top-bar{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--border);align-items:center}
+.top-bar input[type=date]{flex:1 1 0;min-width:0;width:0;background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:9px 6px;color-scheme:dark}
+.sess-btn{flex:0 0 auto;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
 .sess-btn.active{background:#fff;color:#000;border-color:#fff}
-.gear{flex:0 0 auto;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:#fff;font-size:16px}
+.gear{flex:0 0 auto;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:#fff;font-size:16px}
 .nav{background:var(--card);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .tabs{display:flex;border-bottom:1px solid var(--border)}
-.tab-btn{flex:1;padding:14px 4px;border:none;background:none;color:var(--muted);font-size:14px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-btn{flex:1;min-width:0;padding:13px 2px;border:none;background:none;color:var(--muted);font-size:14px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tab-btn.active{color:var(--theme);border-bottom:3px solid var(--theme);background:#121212}
-.ptabs{display:flex;padding:8px 10px;background:#000;gap:10px}
-.p-btn{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
+.ptabs{display:flex;padding:6px 8px;background:#000;gap:8px}
+.p-btn{flex:1;min-width:0;padding:9px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
 .p-btn.active{background:#333;color:#fff;border-color:#555}
-.banner{background:var(--theme-dark);color:#fff;text-align:center;padding:8px;font-size:14px;font-weight:bold;border-bottom:1px solid var(--theme)}
+.banner{background:var(--theme-dark);color:#fff;text-align:center;padding:6px 8px;font-size:14px;font-weight:bold;border-bottom:1px solid var(--theme);overflow-wrap:anywhere}
 .banner.fail{background:#5a0000;border-color:var(--red)}
 .banner small{display:block;font-weight:normal;font-size:12px;opacity:.9;margin-top:2px}
-.info{padding:10px;background:#121212;border-bottom:1px solid var(--border)}
-.row{display:flex;gap:8px;margin-bottom:8px}
-.inp{background:#000;border:1px solid var(--border);color:#fff;padding:10px;border-radius:6px;flex:1;font-size:15px;min-width:0}
-.gbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:10px 14px;border-radius:6px;font-size:15px}
+.info{padding:8px;background:#121212;border-bottom:1px solid var(--border)}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.inp{background:#000;border:1px solid var(--border);color:#fff;padding:9px;border-radius:6px;flex:1;min-width:0}
+.gbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:9px 14px;border-radius:6px;font-size:15px}
 .gbtn.active{background:var(--theme);color:#fff;border-color:var(--theme)}
-.codeline{font-size:12px;color:var(--muted);margin:-2px 0 8px;word-break:break-all}
-.timers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.tbtn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px;text-align:center}
-.tlbl{font-size:12px;color:var(--muted);display:block;padding:8px 0;cursor:pointer;background:#252528;border-radius:6px;margin-bottom:4px}
-.tin{background:transparent;border:none;color:#fff;font-size:17px;font-weight:bold;font-family:monospace;text-align:center;width:100%;outline:none;color-scheme:dark}
-.dur{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
-.btn-wide{width:100%;padding:12px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-weight:bold;margin-top:8px;font-size:14px}
+.codeline{font-size:12px;color:var(--muted);margin:-2px 0 6px;word-break:break-all}
+.timers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:4px}
+.tbtn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px;text-align:center;min-width:0}
+.tlbl{font-size:12px;color:var(--muted);display:block;padding:7px 0;cursor:pointer;background:#252528;border-radius:6px;margin-bottom:3px}
+.tin{background:transparent;border:none;color:#fff;font-weight:bold;font-family:monospace;text-align:center;width:100%;min-width:0;outline:none;color-scheme:dark;padding:2px 0}
+.dur{font-size:12px;color:var(--muted);margin-top:5px;text-align:center}
+.btn-wide{width:100%;padding:11px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-weight:bold;margin-top:6px;font-size:14px}
 .btn-wide.active{background:#3a1515;color:var(--red);border-color:var(--red)}
 .btn-wide.done{background:#12331a;color:var(--green);border-color:var(--green)}
-.mode{display:flex;gap:8px;padding:10px 10px 0}
-.m-btn{flex:1;padding:12px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
+.mode{display:flex;gap:6px;padding:8px 8px 0}
+.m-btn{flex:1;min-width:0;padding:11px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
 .m-btn.active{background:var(--theme);color:#fff;border-color:var(--theme)}
-.lens-sub{display:flex;gap:8px;padding:10px;overflow-x:auto;align-items:center}
-.l-tab{padding:9px 14px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;white-space:nowrap}
+.lens-sub{display:flex;gap:6px;padding:8px;overflow-x:auto;align-items:center}
+.l-tab{flex:0 0 auto;padding:9px 13px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;white-space:nowrap}
 .l-tab.active{background:#555;color:#fff;border-color:#777}
 .l-add{background:transparent;border:1px dashed var(--muted)}
-.l-sel{background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:13px}
-.rx{padding:0 10px 6px}
-.rx-h,.rx-r{display:grid;grid-template-columns:34px repeat(4,1fr);gap:6px;margin-bottom:6px;align-items:center}
+.l-sel{flex:0 0 auto;background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:7px}
+.rx{padding:0 8px 4px}
+.rx-h,.rx-r{display:grid;grid-template-columns:30px repeat(4,minmax(0,1fr));gap:5px;margin-bottom:5px;align-items:center}
 .rx-h div{text-align:center;font-size:12px;color:var(--muted);font-weight:bold}
-.eye{font-size:16px;font-weight:bold;color:var(--muted);text-align:center}
-.cell{background:var(--card);border:2px solid var(--border);border-radius:6px;height:46px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;font-family:monospace}
+.eye{font-size:15px;font-weight:bold;color:var(--muted);text-align:center}
+.cell{background:var(--card);border:2px solid var(--border);border-radius:6px;height:44px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;font-family:monospace;min-width:0;overflow:hidden}
 .cell.active{border-color:var(--theme);background:var(--cell-active)}
 .cell.empty{opacity:.45}
 .minus{color:var(--red)}.plus{color:var(--green)}
-.rx-tools{display:flex;justify-content:flex-end;padding:0 10px 6px}
-.small-btn{background:#2c2c2e;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:12px}
-.pad{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:8px;padding:0 10px 10px}
-.bn{background:#2c2c2e;color:#fff;border:none;border-radius:8px;height:52px;font-size:22px;font-weight:500}
-.bn.dec{color:var(--theme);font-size:18px;font-weight:bold}
-.scroll{flex-grow:1;padding:10px}
-.gt{font-size:13px;font-weight:bold;margin:15px 0 6px;text-transform:uppercase}
-.txt{width:100%;background:#000;border:1px solid #333;color:#fff;font-size:14px;padding:10px;border-radius:6px;min-height:56px;resize:vertical;margin-bottom:8px}
-.txt::placeholder{color:#666;font-style:italic}
+.rx-tools{display:flex;justify-content:flex-end;padding:0 8px 4px}
+.small-btn{background:#2c2c2e;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px}
+.pad{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:6px;padding:0 8px 8px}
+.bn{background:#2c2c2e;color:#fff;border:none;border-radius:8px;height:48px;font-size:21px;font-weight:500;min-width:0}
+.bn.dec{color:var(--theme);font-size:17px;font-weight:bold}
+.scroll{flex-grow:1;padding:8px}
+.gt{font-size:13px;font-weight:bold;margin:14px 0 6px;text-transform:uppercase}
+.txt{width:100%;background:#000;border:1px solid #333;color:#fff;padding:9px;border-radius:6px;min-height:56px;resize:vertical;margin-bottom:8px}
+.txt::placeholder{color:#666;font-style:italic;font-size:14px}
 .err{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:10px}
 .err .gt{margin-top:0;color:var(--theme)}
 .err .map{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none}
-.sev{display:flex;gap:5px}
-.sb{flex:1;padding:10px 0;background:#1a1a1a;border:1px solid #444;color:var(--muted);font-size:12px;font-weight:bold;border-radius:4px}
+.sev{display:flex;gap:4px}
+.sb{flex:1;min-width:0;padding:10px 0;background:#1a1a1a;border:1px solid #444;color:var(--muted);font-size:12px;font-weight:bold;border-radius:4px}
 .sb.active.mild{background:#5c4000;color:#ffb700;border-color:#ffb700}
 .sb.active.mod{background:#6b2a00;color:#ff6a00;border-color:#ff6a00}
 .sb.active.sev3{background:#5a0000;color:#ff3b3b;border-color:#ff3b3b}
 .sb.active.unsafe{background:#f00;color:#fff;border-color:#f00}
-.foot{padding:14px;background:var(--card);border-top:1px solid var(--border);margin-bottom:40px;border-radius:8px}
-.srow{display:flex;align-items:center;gap:6px;margin-bottom:12px}
-.slbl{font-size:13px;font-weight:bold;width:92px;flex:0 0 92px}
-.sbtns{display:flex;gap:3px;flex:1;justify-content:flex-end}
-.s-btn{width:32px;height:36px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:14px;font-weight:bold;padding:0}
+.foot{padding:12px;background:var(--card);border-top:1px solid var(--border);margin-bottom:40px;border-radius:8px}
+.srow{margin-bottom:10px}
+.shead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:26px}
+.slbl{font-size:13px;font-weight:bold}
+.sbtns{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.s-btn{min-width:0;width:100%;height:38px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:14px;font-weight:bold;padding:0}
 .s-btn.auto{background:#1a3a5a;color:#64b5f6;border-color:#64b5f6}
 .s-btn.manual{background:var(--theme);color:#fff;border-color:var(--theme)}
 .s-btn.fail{background:#5a0000!important;color:#ff6b6b!important;border-color:var(--red)!important}
-.s-reset{width:30px;height:36px;border-radius:4px;border:1px solid var(--border);background:#2c2c2e;color:#fff;font-size:14px;padding:0;visibility:hidden}
+.s-reset{height:26px;padding:0 10px;border-radius:13px;border:1px solid var(--border);background:#2c2c2e;color:#fff;font-size:12px;visibility:hidden}
 .s-reset.show{visibility:visible}
-.overall{font-size:13px;margin:4px 0 12px;padding:8px;border-radius:6px;background:#12331a;color:var(--green)}
+.overall{font-size:13px;margin:4px 0 10px;padding:8px;border-radius:6px;background:#12331a;color:var(--green)}
 .overall.fail{background:#3a1515;color:#ff6b6b}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.btn{padding:14px 6px;border-radius:8px;border:none;font-weight:bold;font-size:14px;background:var(--theme);color:#fff}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.btn{padding:13px 4px;border-radius:8px;border:none;font-weight:bold;font-size:14px;background:var(--theme);color:#fff;min-width:0}
 .btn.alt{background:#3a3a3c}
 .btn.danger{background:#3a3a3c;color:var(--red)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;overflow-y:auto}
 .modal.show{display:block}
-.mbox{max-width:520px;margin:0 auto;padding:16px;background:#121212;min-height:100%}
+.mbox{max-width:520px;margin:0 auto;padding:14px;background:#121212;min-height:100%}
 .mbox h3{margin:18px 0 6px;font-size:15px;color:var(--theme)}
-.mbox p{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.5}
+.mbox p{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.5;overflow-wrap:anywhere}
 .mbox code{background:#2c2c2e;padding:1px 5px;border-radius:4px;font-size:12px}
-.imp-prev{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;margin-top:10px;display:none}
+.imp-prev{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px;display:none}
 .stored{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:13px}
 .stored .old{color:#ffb700}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#000;padding:10px 16px;border-radius:20px;font-size:14px;font-weight:bold;z-index:900;display:none;max-width:90%;text-align:center}
+@media (max-width:430px){
+  .tab-btn{font-size:13px}
+  .p-btn{font-size:13px}
+  .gt{font-size:12px}
+  .foot{padding:10px}
+}
 </style>
 </head>
 <body data-student="1">
@@ -135,25 +143,25 @@ button{font-family:inherit;cursor:pointer}
   </div>
 
   <div class="info">
-    <div class="row" style="padding-bottom:10px;border-bottom:1px dashed var(--border)">
+    <div class="row" style="padding-bottom:8px;border-bottom:1px dashed var(--border)">
       <input type="text" id="s-name" class="inp" placeholder="Student name" autocomplete="off" oninput="updateStudentInfo()">
-      <input type="text" id="s-group" class="inp" style="max-width:110px" placeholder="Group (N1)" autocomplete="off" oninput="updateStudentInfo()">
+      <input type="text" id="s-group" class="inp" style="flex:0 0 90px" placeholder="Group" autocomplete="off" oninput="updateStudentInfo()">
     </div>
     <div class="row">
       <input type="text" id="p-id" class="inp" placeholder="Patient ID" autocomplete="off" autocapitalize="characters" oninput="updateInfo()">
     </div>
     <div class="codeline" id="codeline"></div>
     <div class="row">
-      <input type="number" id="p-age" class="inp" style="max-width:90px" placeholder="Age" inputmode="numeric" oninput="updateInfo()">
+      <input type="number" id="p-age" class="inp" style="flex:0 0 84px" placeholder="Age" inputmode="numeric" oninput="updateInfo()">
       <button class="gbtn" id="g-M" onclick="setGender('M')">M</button>
       <button class="gbtn" id="g-F" onclick="setGender('F')">F</button>
     </div>
     <div class="row">
-      <textarea id="txt-prev-hx" class="inp" style="height:46px;font-size:13px" placeholder="Previous Hx (no names / phone numbers / ID numbers)" oninput="updatePrevHx()"></textarea>
-      <button class="m-btn active" style="flex:0 0 80px;padding:0;font-size:13px" onclick="setNewCase()">New Case</button>
+      <textarea id="txt-prev-hx" class="inp" style="height:46px" placeholder="Previous Hx (no names / phone / ID)" oninput="updatePrevHx()"></textarea>
+      <button class="m-btn active" style="flex:0 0 74px;padding:0;font-size:13px" onclick="setNewCase()">New Case</button>
     </div>
     <div class="timers">
-      <div class="tbtn"><span class="tlbl" onclick="logTime('start')">Case Start (tap)</span><input type="time" class="tin" id="v-start" onchange="manualTime('start',this.value)"></div>
+      <div class="tbtn"><span class="tlbl" onclick="logTime('start')">Start (tap)</span><input type="time" class="tin" id="v-start" onchange="manualTime('start',this.value)"></div>
       <div class="tbtn"><span class="tlbl" onclick="logTime('check')">Dilation (tap)</span><input type="time" class="tin" id="v-check" onchange="manualTime('check',this.value)"></div>
       <div class="tbtn"><span class="tlbl" onclick="logTime('end')">Discharge (tap)</span><input type="time" class="tin" id="v-end" onchange="manualTime('end',this.value)"></div>
     </div>
@@ -184,9 +192,9 @@ button{font-family:inherit;cursor:pointer}
 
     <div class="scroll">
       <div class="gt" style="color:#0a84ff">👁️ My Clinical Observations</div>
-      <textarea class="txt" id="txt-my-obs" placeholder="記錄你自己的臨床檢查結果，方便與學生紀錄對比（不影響評分；會包含在匯出摘要，請勿寫入姓名或電話）" oninput="updMyObs(this.value)"></textarea>
+      <textarea class="txt" id="txt-my-obs" placeholder="記錄你自己的臨床檢查結果（不影響評分；會包含在匯出摘要，請勿寫入姓名或電話）" oninput="updMyObs(this.value)"></textarea>
 
-      <div class="gt" style="color:#ff9f0a;margin-top:20px">⚠️ Clinical Errors &amp; Deductions</div>
+      <div class="gt" style="color:#ff9f0a;margin-top:18px">⚠️ Clinical Errors &amp; Deductions</div>
       <div id="errors-box"></div>
 
       <div class="foot">
@@ -211,7 +219,7 @@ button{font-family:inherit;cursor:pointer}
   <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">📥 Import cases</b><button class="small-btn" onclick="closeImport()">Close ✕</button></div>
   <p>每行一位病人，欄位順序：<br><code>Session, Student#, Student name, Group, Patient#, Patient ID (part), Age, Gender, Case Hx</code><br>
   Session = AM 或 PM；Student# = 1–4；Patient# = 1–2；Gender = M 或 F。可用 Tab（由 Google Sheets／Docs 表格直接複製）、<code>|</code> 或逗號分隔，第一行標題可有可無。資料會匯入到畫面頂部目前選取的日期，只覆蓋 ID、年齡、性別、Hx 及學生姓名／組別，不會改動任何評分或臨床記錄。</p>
-  <div class="row">
+  <div class="row" style="flex-wrap:wrap">
     <button class="small-btn" onclick="copyTemplate()">Copy template</button>
     <button class="small-btn" onclick="pasteClip()">Paste from clipboard</button>
     <button class="small-btn" onclick="$('imp-cases-file').click()">Choose file</button>
@@ -371,9 +379,11 @@ function init() {
   $('errors-box').innerHTML = e;
   let s = '';
   DOMAINS.forEach(id => {
-    s += '<div class="srow"><div class="slbl">' + DLABEL[id] + '</div><div class="sbtns" id="sc-' + id + '">' +
+    s += '<div class="srow"><div class="shead"><span class="slbl">' + DLABEL[id] + '</span>' +
+      '<button class="s-reset" id="rs-' + id + '" onclick="resetSc(\'' + id + '\')" aria-label="Reset to auto">↺ auto</button></div>' +
+      '<div class="sbtns" id="sc-' + id + '">' +
       [1,2,3,4,5,6,7,8,9].map(n => '<button class="s-btn" onclick="setManualSc(\'' + id + '\',' + n + ')">' + n + '</button>').join('') +
-      '</div><button class="s-reset" id="rs-' + id + '" onclick="resetSc(\'' + id + '\')" aria-label="Reset to auto">↺</button></div>';
+      '</div></div>';
   });
   $('score-box').innerHTML = s;
 
