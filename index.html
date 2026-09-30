@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V22</title>
+<title>Clinical Supervisor Log V23</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -19,7 +19,7 @@ input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inhe
 button{font-family:inherit;cursor:pointer}
 .app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
 .top-bar{display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);align-items:center}
-.top-bar input[type=date]{flex:1;background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:9px;font-size:14px;color-scheme:dark}
+.top-bar input[type=date]{flex:1;min-width:0;background:var(--card);color:#fff;border:1px solid var(--border);border-radius:8px;padding:9px;font-size:14px;color-scheme:dark}
 .sess-btn{flex:0 0 auto;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:bold}
 .sess-btn.active{background:#fff;color:#000;border-color:#fff}
 .gear{flex:0 0 auto;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:#fff;font-size:16px}
@@ -102,6 +102,8 @@ button{font-family:inherit;cursor:pointer}
 .mbox{max-width:520px;margin:0 auto;padding:16px;background:#121212;min-height:100%}
 .mbox h3{margin:18px 0 6px;font-size:15px;color:var(--theme)}
 .mbox p{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.5}
+.mbox code{background:#2c2c2e;padding:1px 5px;border-radius:4px;font-size:12px}
+.imp-prev{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;margin-top:10px;display:none}
 .stored{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:13px}
 .stored .old{color:#ffb700}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#000;padding:10px 16px;border-radius:20px;font-size:14px;font-weight:bold;z-index:900;display:none;max-width:90%;text-align:center}
@@ -113,6 +115,7 @@ button{font-family:inherit;cursor:pointer}
     <input type="date" id="sel-date" aria-label="Session date">
     <button class="sess-btn active" id="btn-AM" onclick="setSession('AM')">☀️ AM</button>
     <button class="sess-btn" id="btn-PM" onclick="setSession('PM')">🌙 PM</button>
+    <button class="gear" onclick="openImport()" aria-label="Import cases">📥</button>
     <button class="gear" onclick="openSettings()" aria-label="Settings">⚙️</button>
   </div>
 
@@ -204,6 +207,22 @@ button{font-family:inherit;cursor:pointer}
   </div>
 </div>
 
+<div class="modal" id="imp-modal"><div class="mbox">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">📥 Import cases</b><button class="small-btn" onclick="closeImport()">Close ✕</button></div>
+  <p>每行一位病人，欄位順序：<br><code>Session, Student#, Student name, Group, Patient#, Patient ID (part), Age, Gender, Case Hx</code><br>
+  Session = AM 或 PM；Student# = 1–4；Patient# = 1–2；Gender = M 或 F。可用 Tab（由 Google Sheets／Docs 表格直接複製）、<code>|</code> 或逗號分隔，第一行標題可有可無。資料會匯入到畫面頂部目前選取的日期，只覆蓋 ID、年齡、性別、Hx 及學生姓名／組別，不會改動任何評分或臨床記錄。</p>
+  <div class="row">
+    <button class="small-btn" onclick="copyTemplate()">Copy template</button>
+    <button class="small-btn" onclick="pasteClip()">Paste from clipboard</button>
+    <button class="small-btn" onclick="$('imp-cases-file').click()">Choose file</button>
+  </div>
+  <input type="file" id="imp-cases-file" accept=".txt,.csv,.tsv,text/plain,text/csv,text/tab-separated-values" style="display:none" onchange="loadCasesFile(this)">
+  <textarea id="imp-text" class="txt" style="min-height:170px" placeholder="在此貼上資料…"></textarea>
+  <button class="btn" style="width:100%" onclick="previewImport()">Preview</button>
+  <div class="imp-prev" id="imp-preview"></div>
+  <button class="btn" id="imp-apply" style="width:100%;margin-top:10px;display:none;background:#32d74b;color:#000" onclick="applyImport()">Apply import</button>
+</div></div>
+
 <div class="modal" id="modal"><div class="mbox">
   <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">⚙️ Settings</b><button class="small-btn" onclick="closeSettings()">Close ✕</button></div>
 
@@ -252,11 +271,13 @@ const catIds = Object.keys(errDefs);
 
 let curDate = todayStr(), curSess = 'AM', db = {};
 let settings = loadSettings();
-let roster = loadRoster(curSess);
+let roster = readRoster(curSess);
 let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph', lensIdx = 0;
+let importRows = [], importOverwrites = 0;
 
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-function dayKey() { return PFX + 'day_' + curDate.replace(/-/g, '') + '_' + curSess; }
+function dayKeyFor(date, sess) { return PFX + 'day_' + date.replace(/-/g, '') + '_' + sess; }
+function dayKey() { return dayKeyFor(curDate, curSess); }
 function rosterKey(sess) { return PFX + 'roster_' + sess; }
 function bRx() { return {sph:'+', cyl:'-', axis:'', add:'+'}; }
 function newLens() { return {type:'SPX', OD:bRx(), OS:bRx()}; }
@@ -304,24 +325,26 @@ function readRoster(sess) {
   }
   return base;
 }
-function loadRoster(sess) { return readRoster(sess); }
 function saveRoster() {
   try { localStorage.setItem(rosterKey(curSess), JSON.stringify(roster)); } catch (e) { toast('⚠ 名單儲存失敗'); }
 }
 
-function loadDay() {
+function readDayFor(date, sess) {
   let raw = null;
-  try { raw = JSON.parse(localStorage.getItem(dayKey())); } catch (e) {}
-  db = (raw && typeof raw === 'object') ? raw : {};
-  for (let s = 1; s <= NS; s++) { db[s] = db[s] || {}; for (let p = 1; p <= NP; p++) db[s][p] = normPatient(db[s][p]); }
+  try { raw = JSON.parse(localStorage.getItem(dayKeyFor(date, sess))); } catch (e) {}
+  const o = (raw && typeof raw === 'object') ? raw : {};
+  for (let s = 1; s <= NS; s++) { o[s] = o[s] || {}; for (let p = 1; p <= NP; p++) o[s][p] = normPatient(o[s][p]); }
+  return o;
 }
-function save() {
-  try { localStorage.setItem(dayKey(), JSON.stringify(db)); } catch (e) { toast('⚠ 儲存失敗：儲存空間已滿或被瀏覽器禁用'); }
+function writeDayFor(date, sess, o) {
+  try { localStorage.setItem(dayKeyFor(date, sess), JSON.stringify(o)); return true; } catch (e) { toast('⚠ 儲存失敗：儲存空間已滿或被瀏覽器禁用'); return false; }
 }
+function loadDay() { db = readDayFor(curDate, curSess); }
+function save() { writeDayFor(curDate, curSess, db); }
 function P() { return db[cS][cP]; }
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.style.display = 'block';
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000);
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3200);
 }
 
 function caseCode(s, p) { return curDate.slice(5, 7) + curDate.slice(8, 10) + '-' + curSess + '-S' + s + '-P' + p; }
@@ -542,7 +565,7 @@ function manualTime(k, val) {
   save(); render();
 }
 
-function setSession(s) { curSess = s; roster = loadRoster(s); loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); }
+function setSession(s) { curSess = s; roster = readRoster(s); loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); }
 function setS(s) { cS = s; lensIdx = 0; render(); }
 function setP(p) { cP = p; lensIdx = 0; render(); }
 function setM(m) { cM = m; render(); }
@@ -705,6 +728,144 @@ function executeReset() {
   render(); toast('已重設 ' + curSess + ' session');
 }
 
+/* ===== Import cases ===== */
+function openImport() { $('imp-preview').style.display = 'none'; $('imp-apply').style.display = 'none'; importRows = []; $('imp-modal').classList.add('show'); }
+function closeImport() { $('imp-modal').classList.remove('show'); }
+async function copyTemplate() {
+  const t = ['Session', 'Student#', 'Student name', 'Group', 'Patient#', 'Patient ID (part)', 'Age', 'Gender', 'Case Hx'].join('\t') + '\n' +
+    ['AM', '1', 'Student A', 'N1', '1', '4567', '65', 'F', 'Sample Hx: blurred vision OU 3 months'].join('\t') + '\n' +
+    ['AM', '1', 'Student A', 'N1', '2', '8910', '42', 'M', 'Sample Hx: routine check'].join('\t');
+  toast((await copyText(t)) ? '✓ 範本已複製，可貼到 Google Sheets／Docs' : '⚠ 複製失敗');
+}
+function pasteClip() {
+  if (!navigator.clipboard || !navigator.clipboard.readText) { toast('此瀏覽器不能直接讀取剪貼簿，請長按文字框貼上'); return; }
+  navigator.clipboard.readText().then(t => { $('imp-text').value = t; previewImport(); }).catch(() => toast('無法讀取剪貼簿，請長按文字框貼上'));
+}
+function loadCasesFile(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { $('imp-text').value = String(rd.result); previewImport(); inp.value = ''; };
+  rd.readAsText(f);
+}
+function detectDelim(text) {
+  const first = (text.split(/\r?\n/).find(l => l.trim()) || '');
+  if (first.includes('\t')) return '\t';
+  if (first.includes('|')) return '|';
+  return ',';
+}
+function parseTable(text, delim) {
+  text = text.replace(/^\uFEFF/, '');
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"' && cur === '') q = true;
+    else if (c === delim) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; rows.push(row); row = []; }
+    else cur += c;
+  }
+  row.push(cur); rows.push(row);
+  return rows.filter(r => r.some(x => x.trim() !== ''));
+}
+function interpretRows(rows, delim) {
+  const out = [], msgs = [];
+  let start = 0;
+  if (rows.length && !/^(am|pm)$/i.test(rows[0][0].trim())) start = 1;
+  const seen = {};
+  for (let i = start; i < rows.length; i++) {
+    const c = rows[i].map(x => x.trim()), ln = i + 1;
+    if (c.length < 8) { msgs.push('✗ 第 ' + ln + ' 行：欄位不足（至少 8 欄）'); continue; }
+    const sess = c[0].toUpperCase();
+    if (sess !== 'AM' && sess !== 'PM') { msgs.push('✗ 第 ' + ln + ' 行：Session 必須是 AM 或 PM'); continue; }
+    const s = parseInt(c[1].replace(/\D/g, ''), 10), p = parseInt(c[4].replace(/\D/g, ''), 10);
+    if (!(s >= 1 && s <= NS)) { msgs.push('✗ 第 ' + ln + ' 行：Student# 必須是 1–' + NS); continue; }
+    if (!(p >= 1 && p <= NP)) { msgs.push('✗ 第 ' + ln + ' 行：Patient# 必須是 1–' + NP); continue; }
+    let age = c[6];
+    if (age && !/^\d{1,3}$/.test(age)) { msgs.push('⚠ 第 ' + ln + ' 行：年齡格式不正確，已略過年齡'); age = ''; }
+    let g = c[7].toUpperCase();
+    if (g === '男') g = 'M'; if (g === '女') g = 'F';
+    if (g && g !== 'M' && g !== 'F') { msgs.push('⚠ 第 ' + ln + ' 行：性別應為 M 或 F，已略過性別'); g = ''; }
+    const hx = c.slice(8).join(delim === ',' ? ', ' : ' ').trim();
+    const key = sess + s + '-' + p;
+    if (seen[key]) msgs.push('⚠ 第 ' + ln + ' 行：' + sess + ' S' + s + ' P' + p + ' 重複，以後者為準');
+    seen[key] = true;
+    out.push({ln:ln, sess:sess, s:s, p:p, name:c[2], group:c[3], id:c[5], age:age, gender:g, hx:hx});
+  }
+  const nm = {};
+  out.forEach(r => {
+    const k = r.sess + r.s;
+    if (r.name) { if (nm[k] && nm[k] !== r.name) msgs.push('⚠ ' + r.sess + ' S' + r.s + ' 的學生姓名不一致（' + nm[k] + ' / ' + r.name + '），以最後一行為準'); nm[k] = r.name; }
+  });
+  return {rows:out, msgs:msgs};
+}
+function previewImport() {
+  const text = $('imp-text').value;
+  const box = $('imp-preview'), ap = $('imp-apply');
+  importRows = []; importOverwrites = 0;
+  if (!text.trim()) { box.style.display = 'block'; box.textContent = '請先貼上資料。'; ap.style.display = 'none'; return; }
+  const delim = detectDelim(text);
+  const res = interpretRows(parseTable(text, delim), delim);
+  importRows = res.rows;
+  const lines = [];
+  lines.push('匯入日期：' + curDate + '（如需更改，請先在畫面頂部選擇日期）');
+  ['AM', 'PM'].forEach(sess => {
+    const rs = importRows.filter(r => r.sess === sess);
+    if (!rs.length) return;
+    const ros = readRoster(sess), day = readDayFor(curDate, sess);
+    lines.push('', '【' + sess + '】');
+    const students = [...new Set(rs.map(r => r.s))].sort();
+    students.forEach(s => {
+      const rr = rs.filter(r => r.s === s);
+      const last = rr.filter(r => r.name).slice(-1)[0];
+      const grp = rr.filter(r => r.group).slice(-1)[0];
+      const nm = last ? last.name : (ros.names[s] || '(未命名)');
+      lines.push('S' + s + ' ' + nm + (grp ? ' [' + grp.group + ']' : ''));
+      if (last && ros.names[s] && ros.names[s] !== last.name) { importOverwrites++; lines.push('  ⚠ 將覆蓋現有姓名：' + ros.names[s]); }
+      rr.forEach(r => {
+        const d = day[r.s][r.p];
+        let note = '';
+        if (r.id && d.pxId && d.pxId !== r.id) { importOverwrites++; note += ' ⚠覆蓋ID(' + d.pxId + ')'; }
+        if (r.hx && d.prevHx && d.prevHx !== 'New case' && d.prevHx !== r.hx) { importOverwrites++; note += ' ⚠覆蓋Hx'; }
+        lines.push('  P' + r.p + '  ID ' + (r.id || '—') + ' · ' + (r.age || '?') + (r.gender || '?') + ' · Hx ' + (r.hx ? r.hx.length + ' 字' : '—') + note);
+      });
+    });
+  });
+  if (res.msgs.length) { lines.push('', '提示：'); res.msgs.forEach(m => lines.push(m)); }
+  lines.push('', importRows.length ? '可匯入 ' + importRows.length + ' 位病人。' + (importOverwrites ? '其中有 ' + importOverwrites + ' 項會覆蓋現有內容。' : '') : '沒有可匯入的資料。');
+  box.style.display = 'block'; box.textContent = lines.join('\n');
+  ap.style.display = importRows.length ? 'block' : 'none';
+}
+function applyImport() {
+  if (!importRows.length) return;
+  if (importOverwrites > 0 && !confirm('有 ' + importOverwrites + ' 項會覆蓋現有姓名／ID／Hx，確定匯入？')) return;
+  let n = 0;
+  ['AM', 'PM'].forEach(sess => {
+    const rs = importRows.filter(r => r.sess === sess);
+    if (!rs.length) return;
+    const isCur = sess === curSess;
+    const ros = isCur ? roster : readRoster(sess);
+    const day = isCur ? db : readDayFor(curDate, sess);
+    rs.forEach(r => {
+      if (r.name) ros.names[r.s] = r.name;
+      if (r.group) ros.groups[r.s] = r.group;
+      if (r.s === 4) ros.showS4 = true;
+      const d = day[r.s][r.p];
+      if (r.id) d.pxId = r.id;
+      if (r.age) d.age = r.age;
+      if (r.gender) d.gender = r.gender;
+      if (r.hx) d.prevHx = r.hx;
+      n++;
+    });
+    if (isCur) { saveRoster(); save(); }
+    else { try { localStorage.setItem(rosterKey(sess), JSON.stringify(ros)); } catch (e) { toast('⚠ 名單儲存失敗'); } writeDayFor(curDate, sess, day); }
+  });
+  importRows = []; $('imp-text').value = '';
+  closeImport(); render(); toast('✓ 已匯入 ' + n + ' 位病人');
+}
+
+/* ===== Settings / backup ===== */
 function openSettings() {
   $('set-prompt').value = settings.prompt || ''; $('set-hx').checked = !!settings.inclHx;
   renderStored(); $('modal').classList.add('show');
@@ -760,7 +921,7 @@ function importBackup(inp) {
       if (!ks.length || !confirm('匯入 ' + ks.length + ' 個記錄？相同日期及時段的現有資料將被覆蓋（若備份含名單，AM／PM 名單也會被覆蓋）。')) return;
       ks.forEach(k => localStorage.setItem(k, JSON.stringify(o.days[k])));
       if (o.rosters) ['AM', 'PM'].forEach(s => { if (o.rosters[s]) localStorage.setItem(rosterKey(s), JSON.stringify(o.rosters[s])); });
-      roster = loadRoster(curSess);
+      roster = readRoster(curSess);
       loadDay(); render(); renderStored(); toast('✓ 匯入完成');
     } catch (e) { toast('⚠ 檔案格式不正確'); }
     inp.value = '';
@@ -775,7 +936,7 @@ function jumpTo() {
   if (s < 1 || s > NS || p < 1 || p > NP) { toast('S / P 編號超出範圍'); return; }
   curDate = curDate.slice(0, 4) + '-' + m[1] + '-' + m[2]; curSess = m[3].toUpperCase();
   $('sel-date').value = curDate;
-  roster = loadRoster(curSess);
+  roster = readRoster(curSess);
   if (s === 4 && !roster.showS4) { roster.showS4 = true; saveRoster(); }
   loadDay(); cS = s; cP = p; lensIdx = 0; closeSettings(); render();
   if (!hasData(P())) toast('注意：此日期／時段在本機沒有資料');
