@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V21</title>
+<title>Clinical Supervisor Log V22</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -198,7 +198,7 @@ button{font-family:inherit;cursor:pointer}
           <button class="btn alt" onclick="doDownload()">💾 Download .txt</button>
           <button class="btn alt" onclick="doEmail()">📧 Email</button>
         </div>
-        <button class="btn danger" style="width:100%;margin-top:10px" onclick="executeReset()">🗑 Reset all (patients + students)</button>
+        <button class="btn danger" id="btn-reset" style="width:100%;margin-top:10px" onclick="executeReset()">🗑 Reset AM session</button>
       </div>
     </div>
   </div>
@@ -209,6 +209,9 @@ button{font-family:inherit;cursor:pointer}
 
   <h3>🔒 匯出時 Patient ID 最小化</h3>
   <p>App 內顯示並保存完整 Patient ID；只有匯出摘要（Copy／Share／Download／Email）時，才只顯示末段號碼（最多末 4 位；ID 較短時，顯示不多於一半），其餘以 * 遮蔽。例如 A1234567 → ****4567。</p>
+
+  <h3>👥 AM／PM 名單</h3>
+  <p>AM 與 PM 各有獨立的學生姓名、組別及 S4 設定；Reset 只會清除目前所在的 session，不影響另一個。</p>
 
   <h3>📝 匯出摘要開頭指示（給 Gemini）</h3>
   <textarea class="txt" id="set-prompt" style="min-height:110px"></textarea>
@@ -247,12 +250,14 @@ const errDefs = {
 };
 const catIds = Object.keys(errDefs);
 
-let settings = loadSettings();
 let curDate = todayStr(), curSess = 'AM', db = {};
+let settings = loadSettings();
+let roster = loadRoster(curSess);
 let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph', lensIdx = 0;
 
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function dayKey() { return PFX + 'day_' + curDate.replace(/-/g, '') + '_' + curSess; }
+function rosterKey(sess) { return PFX + 'roster_' + sess; }
 function bRx() { return {sph:'+', cyl:'-', axis:'', add:'+'}; }
 function newLens() { return {type:'SPX', OD:bRx(), OS:bRx()}; }
 function newPatient() {
@@ -274,23 +279,36 @@ function normPatient(o) {
   d.manualScores = o.manualScores || {};
   return d;
 }
-function defaultSettings() {
-  return {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false, prompt:DEFAULT_PROMPT, inclHx:true};
-}
+
+function defaultSettings() { return {prompt:DEFAULT_PROMPT, inclHx:true}; }
 function loadSettings() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(PFX + 'settings')); } catch (e) {}
   const base = defaultSettings();
-  if (s && typeof s === 'object') {
-    Object.keys(base).forEach(k => { if (s[k] !== undefined) base[k] = s[k]; });
-    base.names = Object.assign({1:'',2:'',3:'',4:''}, s.names || {});
-    base.groups = Object.assign({1:'',2:'',3:'',4:''}, s.groups || {});
-  }
+  if (s && typeof s === 'object') Object.keys(base).forEach(k => { if (s[k] !== undefined) base[k] = s[k]; });
   return base;
 }
 function saveSettings() {
   try { localStorage.setItem(PFX + 'settings', JSON.stringify(settings)); } catch (e) { toast('⚠ 設定儲存失敗'); }
 }
+
+function defaultRoster() { return {names:{1:'',2:'',3:'',4:''}, groups:{1:'',2:'',3:'',4:''}, showS4:false}; }
+function readRoster(sess) {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(rosterKey(sess))); } catch (e) {}
+  const base = defaultRoster();
+  if (r && typeof r === 'object') {
+    base.names = Object.assign(base.names, r.names || {});
+    base.groups = Object.assign(base.groups, r.groups || {});
+    base.showS4 = !!r.showS4;
+  }
+  return base;
+}
+function loadRoster(sess) { return readRoster(sess); }
+function saveRoster() {
+  try { localStorage.setItem(rosterKey(curSess), JSON.stringify(roster)); } catch (e) { toast('⚠ 名單儲存失敗'); }
+}
+
 function loadDay() {
   let raw = null;
   try { raw = JSON.parse(localStorage.getItem(dayKey())); } catch (e) {}
@@ -401,17 +419,18 @@ function render() {
   document.body.setAttribute('data-student', cS);
   $('btn-AM').className = 'sess-btn' + (curSess === 'AM' ? ' active' : '');
   $('btn-PM').className = 'sess-btn' + (curSess === 'PM' ? ' active' : '');
-  $('tab-s4').style.display = settings.showS4 ? 'block' : 'none';
-  $('btn-add-s').style.display = settings.showS4 ? 'none' : 'block';
+  $('btn-reset').textContent = '🗑 Reset ' + curSess + ' session';
+  $('tab-s4').style.display = roster.showS4 ? 'block' : 'none';
+  $('btn-add-s').style.display = roster.showS4 ? 'none' : 'block';
   for (let i = 1; i <= NS; i++) {
-    const b = $('tab-s' + i); b.textContent = '👨‍⚕️ ' + (settings.names[i] || ('S ' + i));
+    const b = $('tab-s' + i); b.textContent = '👨‍⚕️ ' + (roster.names[i] || ('S ' + i));
     b.classList.toggle('active', i === cS);
   }
   for (let p = 1; p <= NP; p++) {
     const b = $('ptab-' + p); b.textContent = '🗂️ Patient ' + p + (db[cS][p].done ? ' ✓' : '');
     b.classList.toggle('active', p === cP);
   }
-  $('s-name').value = settings.names[cS]; $('s-group').value = settings.groups[cS];
+  $('s-name').value = roster.names[cS]; $('s-group').value = roster.groups[cS];
   $('p-id').value = d.pxId; $('p-age').value = d.age;
   $('g-M').className = 'gbtn' + (d.gender === 'M' ? ' active' : '');
   $('g-F').className = 'gbtn' + (d.gender === 'F' ? ' active' : '');
@@ -466,10 +485,10 @@ function renderDur(d) {
 function renderCodeLine(d) {
   $('codeline').textContent = 'Case Code: ' + caseCode(cS, cP) + (d.pxId ? ' · 匯出顯示: ' + maskId(d.pxId) : '');
   const ov = overall(d);
-  const nm = settings.names[cS] || ('S ' + cS);
+  const nm = roster.names[cS] || ('S ' + cS);
   const b = $('banner');
   b.className = 'banner' + (ov.fails.length && (hasData(d) && !d.noShow) ? ' fail' : '');
-  b.textContent = '📝 ' + nm + ' ➔ Patient ' + cP + ' · ' + (d.age || '?') + (d.gender || '?');
+  b.textContent = '📝 ' + curSess + ' · ' + nm + ' ➔ Patient ' + cP + ' · ' + (d.age || '?') + (d.gender || '?');
   const sm = document.createElement('small');
   sm.textContent = (d.pxId ? 'ID ' + d.pxId + ' · ' : '') + caseCode(cS, cP) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
   b.appendChild(sm);
@@ -493,7 +512,7 @@ function renderDone(d) {
   b.textContent = d.done ? '☑ Grading completed (tap to undo)' : '☐ Grading not completed (tap to mark done)';
 }
 
-function addS4() { settings.showS4 = true; saveSettings(); render(); }
+function addS4() { roster.showS4 = true; saveRoster(); render(); }
 function toggleNoShow() { P().noShow = !P().noShow; save(); render(); }
 function toggleDone() { P().done = !P().done; save(); render(); }
 function setNewCase() {
@@ -502,8 +521,8 @@ function setNewCase() {
   d.prevHx = 'New case'; save(); render();
 }
 function updateStudentInfo() {
-  settings.names[cS] = $('s-name').value; settings.groups[cS] = $('s-group').value; saveSettings();
-  const b = $('tab-s' + cS); b.textContent = '👨‍⚕️ ' + (settings.names[cS] || ('S ' + cS));
+  roster.names[cS] = $('s-name').value; roster.groups[cS] = $('s-group').value; saveRoster();
+  const b = $('tab-s' + cS); b.textContent = '👨‍⚕️ ' + (roster.names[cS] || ('S ' + cS));
   renderCodeLine(P());
 }
 function updateInfo() { const d = P(); d.pxId = $('p-id').value; d.age = $('p-age').value; save(); renderCodeLine(d); }
@@ -523,7 +542,7 @@ function manualTime(k, val) {
   save(); render();
 }
 
-function setSession(s) { curSess = s; loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); }
+function setSession(s) { curSess = s; roster = loadRoster(s); loadDay(); cS = 1; cP = 1; lensIdx = 0; render(); }
 function setS(s) { cS = s; lensIdx = 0; render(); }
 function setP(p) { cP = p; lensIdx = 0; render(); }
 function setM(m) { cM = m; render(); }
@@ -596,9 +615,9 @@ function generateReport() {
   lines.push('Date: ' + curDate + ' | Session: ' + curSess + ' | Generated: ' + fmtT(new Date().toISOString()));
   const tally = [];
   for (let s = 1; s <= NS; s++) {
-    if (s === 4 && !settings.showS4) continue;
-    const nm = settings.names[s] || ('S' + s);
-    const stu = settings.groups[s] ? nm + ' [' + settings.groups[s] + ']' : nm;
+    if (s === 4 && !roster.showS4) continue;
+    const nm = roster.names[s] || ('S' + s);
+    const stu = roster.groups[s] ? nm + ' [' + roster.groups[s] + ']' : nm;
     lines.push('', '[Student: ' + stu + ']');
     let entered = 0, ns = 0, done = 0;
     for (let p = 1; p <= NP; p++) {
@@ -676,15 +695,14 @@ function doEmail() {
   window.location.href = 'mailto:?subject=' + encodeURIComponent('Clinical Log ' + curDate + ' ' + curSess) + '&body=' + encodeURIComponent(t);
 }
 function executeReset() {
-  if (!confirm('確定重設？\n將清除：\n• ' + curDate + ' ' + curSess + ' 所有病人資料\n• 所有學生姓名及組別\n• 額外的 S4 會移除，還原為 3 位學生')) return;
+  const other = curSess === 'AM' ? 'PM' : 'AM';
+  if (!confirm('確定重設 ' + curSess + ' session？\n將清除：\n• ' + curDate + ' ' + curSess + ' 所有病人資料\n• ' + curSess + ' 組學生姓名及組別\n• 額外的 S4（還原為 3 位學生）\n\n' + other + ' session 不受影響。')) return;
   if (confirm('重設前是否先下載備份到本機？\n確定 = 先下載備份\n取消 = 不備份，直接重設')) exportBackup(true);
   localStorage.removeItem(dayKey());
-  const keepPrompt = settings.prompt, keepHx = settings.inclHx;
-  settings = defaultSettings();
-  settings.prompt = keepPrompt; settings.inclHx = keepHx;
-  saveSettings();
+  localStorage.removeItem(rosterKey(curSess));
+  roster = defaultRoster();
   loadDay(); cS = 1; cP = 1; cM = 'lens'; aE = 'OD'; aF = 'sph'; lensIdx = 0;
-  render(); toast('已重設：學生姓名、病人資料及 S4 已清除');
+  render(); toast('已重設 ' + curSess + ' session');
 }
 
 function openSettings() {
@@ -716,16 +734,19 @@ function renderStored() {
   });
 }
 function deleteAll() {
-  if (!confirm('刪除此裝置上所有日誌記錄？')) return;
+  if (!confirm('刪除此裝置上所有日誌記錄及 AM／PM 名單？')) return;
   if (!confirm('再次確認：此操作無法還原。')) return;
   storedKeys().forEach(k => localStorage.removeItem(k));
+  ['AM', 'PM'].forEach(s => localStorage.removeItem(rosterKey(s)));
+  roster = defaultRoster();
   loadDay(); render(); renderStored(); toast('已刪除全部記錄');
 }
 function exportBackup(silent) {
   const days = {};
   save();
   storedKeys().forEach(k => { try { days[k] = JSON.parse(localStorage.getItem(k)); } catch (e) {} });
-  downloadBlob('ClinicalLog_backup_' + curDate + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), settings:{names:settings.names, groups:settings.groups}, days:days}), 'application/json');
+  const rosters = {AM:readRoster('AM'), PM:readRoster('PM')};
+  downloadBlob('ClinicalLog_backup_' + curDate + '_' + curSess + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), rosters:rosters, days:days}), 'application/json');
   if (!silent) toast('✓ 備份已下載（含完整 ID，請妥善保管）');
 }
 function importBackup(inp) {
@@ -736,9 +757,10 @@ function importBackup(inp) {
       const o = JSON.parse(rd.result);
       if (!o || o.version !== 18 || typeof o.days !== 'object') throw new Error('bad');
       const ks = Object.keys(o.days).filter(k => /^optom_v18_day_\d{8}_(AM|PM)$/.test(k));
-      if (!ks.length || !confirm('匯入 ' + ks.length + ' 個記錄？相同日期及時段的現有資料將被覆蓋。')) return;
+      if (!ks.length || !confirm('匯入 ' + ks.length + ' 個記錄？相同日期及時段的現有資料將被覆蓋（若備份含名單，AM／PM 名單也會被覆蓋）。')) return;
       ks.forEach(k => localStorage.setItem(k, JSON.stringify(o.days[k])));
-      if (o.settings && o.settings.names) { settings.names = Object.assign(settings.names, o.settings.names); settings.groups = Object.assign(settings.groups, o.settings.groups || {}); saveSettings(); }
+      if (o.rosters) ['AM', 'PM'].forEach(s => { if (o.rosters[s]) localStorage.setItem(rosterKey(s), JSON.stringify(o.rosters[s])); });
+      roster = loadRoster(curSess);
       loadDay(); render(); renderStored(); toast('✓ 匯入完成');
     } catch (e) { toast('⚠ 檔案格式不正確'); }
     inp.value = '';
@@ -753,7 +775,8 @@ function jumpTo() {
   if (s < 1 || s > NS || p < 1 || p > NP) { toast('S / P 編號超出範圍'); return; }
   curDate = curDate.slice(0, 4) + '-' + m[1] + '-' + m[2]; curSess = m[3].toUpperCase();
   $('sel-date').value = curDate;
-  if (s === 4) settings.showS4 = true;
+  roster = loadRoster(curSess);
+  if (s === 4 && !roster.showS4) { roster.showS4 = true; saveRoster(); }
   loadDay(); cS = s; cP = p; lensIdx = 0; closeSettings(); render();
   if (!hasData(P())) toast('注意：此日期／時段在本機沒有資料');
 }
