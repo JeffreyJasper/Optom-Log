@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Clinical Supervisor Log V24</title>
+<title>Clinical Supervisor Log V25</title>
 <style>
 :root{--bg:#000;--card:#1c1c1e;--text:#fff;--muted:#a0a0a8;--red:#ff453a;--green:#32d74b;--border:#333;--cell-active:#1a2a3a;--theme:#0a84ff;--theme-dark:#002b5e}
 body[data-student="1"]{--theme:#0a84ff;--theme-dark:#002b5e}
@@ -108,6 +108,10 @@ button{font-family:inherit;cursor:pointer}
 .imp-prev{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px;display:none}
 .stored{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:13px}
 .stored .old{color:#ffb700}
+.assign-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.assign-grid select{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:6px;padding:9px}
+.assign-preview{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin:8px 0}
+.status-cancelled{color:#ff9f0a}.status-walkin{color:#32d74b}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#000;padding:10px 16px;border-radius:20px;font-size:14px;font-weight:bold;z-index:900;display:none;max-width:90%;text-align:center}
 @media (max-width:430px){
   .tab-btn{font-size:13px}
@@ -240,6 +244,13 @@ button{font-family:inherit;cursor:pointer}
   <h3>👥 AM／PM 名單</h3>
   <p>AM 與 PM 各有獨立的學生姓名、組別及 S4 設定；Reset 只會清除目前所在的 session，不影響另一個。</p>
 
+  <h3>🔁 驗眼前 Case 調動</h3>
+  <p>只可調動尚未開始的個案。鎖定以個別 Patient case 計算：即使 Student 正在處理 Patient 1，仍可調動其尚未開始的 Patient 2。完成後會保留你原本正在查看的 Student／Patient。</p>
+  <div class="row"><select id="assign-action" class="inp" onchange="previewAssignment()"><option value="move">Move to empty slot</option><option value="swap">Swap two cases</option><option value="cancel">Mark as Cancelled</option><option value="walkin">Replace cancelled case with Walk-in</option></select></div>
+  <div class="assign-grid"><select id="assign-from-s" onchange="previewAssignment()"></select><select id="assign-from-p" onchange="previewAssignment()"></select></div>
+  <div class="assign-grid" id="assign-to-row"><select id="assign-to-s" onchange="previewAssignment()"></select><select id="assign-to-p" onchange="previewAssignment()"></select></div>
+  <div class="assign-preview" id="assign-preview"></div>
+  <button class="btn" id="assign-apply" style="width:100%" onclick="applyAssignment()">Apply case change</button>
   <h3>📝 匯出摘要開頭指示（給 Gemini）</h3>
   <textarea class="txt" id="set-prompt" style="min-height:110px"></textarea>
   <label style="font-size:13px;display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="set-hx"> 匯出時包含 Previous Hx</label>
@@ -264,7 +275,7 @@ const pad = n => String(n).padStart(2, '0');
 const NS = 4, NP = 2, PFX = 'optom_v18_';
 const DOMAINS = ['prelim', 'comm', 'prof', 'fluency', 'accuracy'];
 const DLABEL = {prelim:'Preliminary', comm:'Communication', prof:'Proficiency', fluency:'Fluency', accuracy:'Accuracy'};
-const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 只顯示末段號碼）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的繁體中文回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
+const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 只顯示末段號碼）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的英文(IELTS 7.0) 回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
 
 const errDefs = {
   '1. History & Workflow': {ph:'e.g., Inefficient workflow, missed chief complaint, incomplete glaucoma risks...', map:['comm','fluency']},
@@ -281,7 +292,7 @@ let curDate = todayStr(), curSess = 'AM', db = {};
 let settings = loadSettings();
 let roster = readRoster(curSess);
 let cS = 1, cP = 1, cM = 'lens', aE = 'OD', aF = 'sph', lensIdx = 0;
-let importRows = [], importOverwrites = 0;
+let importRows = [], importOverwrites = 0, importLocked = 0;
 
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function dayKeyFor(date, sess) { return PFX + 'day_' + date.replace(/-/g, '') + '_' + sess; }
@@ -290,7 +301,7 @@ function rosterKey(sess) { return PFX + 'roster_' + sess; }
 function bRx() { return {sph:'+', cyl:'-', axis:'', add:'+'}; }
 function newLens() { return {type:'SPX', OD:bRx(), OS:bRx()}; }
 function newPatient() {
-  const p = {pxId:'', age:'', gender:'', prevHx:'', noShow:false, done:false,
+  const p = {pxId:'', age:'', gender:'', prevHx:'', noShow:false, status:'scheduled', cancelledAt:null, replacementOf:null, done:false,
     times:{start:null, check:null, end:null}, lenses:[newLens()], rx:{OD:bRx(), OS:bRx()},
     errors:{}, manualScores:{}, note:'', myObs:''};
   catIds.forEach(c => p.errors[c] = {text:'', sev:0});
@@ -306,6 +317,10 @@ function normPatient(o) {
   const base = newPatient().errors;
   catIds.forEach(c => { d.errors[c] = Object.assign(base[c], (o.errors || {})[c] || {}); });
   d.manualScores = o.manualScores || {};
+  if (!d.status) d.status = d.noShow ? 'noshow' : 'scheduled';
+  if (d.noShow) d.status = 'noshow';
+  if (d.cancelledAt === undefined) d.cancelledAt = null;
+  if (d.replacementOf === undefined) d.replacementOf = null;
   return d;
 }
 
@@ -431,6 +446,24 @@ function hasData(d) {
   if (catIds.some(c => d.errors[c].sev > 0 || d.errors[c].text.trim())) return true;
   return Object.keys(d.manualScores).length > 0;
 }
+function hasClinicalData(d) {
+  if (d.times.start || d.times.check || d.times.end || d.myObs || d.note || d.done) return true;
+  if (d.lenses.some(l => !rxEmpty(l.OD) || !rxEmpty(l.OS))) return true;
+  if (!rxEmpty(d.rx.OD) || !rxEmpty(d.rx.OS)) return true;
+  if (catIds.some(c => d.errors[c].sev > 0 || d.errors[c].text.trim())) return true;
+  return Object.keys(d.manualScores).length > 0;
+}
+function hasAppointmentData(d) {
+  return !!(d.pxId || d.age || d.gender || d.prevHx || d.noShow || d.status !== 'scheduled');
+}
+function clonePatient(d) { return normPatient(JSON.parse(JSON.stringify(d))); }
+function statusLabel(d) {
+  if (d.noShow || d.status === 'noshow') return 'NO SHOW';
+  if (d.status === 'cancelled') return 'CANCELLED';
+  if (d.status === 'walkin') return 'WALK-IN';
+  return 'SCHEDULED';
+}
+
 function checks(d) {
   const w = [];
   if (!d.times.start) w.push('No Case Start time recorded');
@@ -468,9 +501,10 @@ function render() {
   $('g-M').className = 'gbtn' + (d.gender === 'M' ? ' active' : '');
   $('g-F').className = 'gbtn' + (d.gender === 'F' ? ' active' : '');
   $('txt-prev-hx').value = d.prevHx;
-  $('main-zone').style.display = d.noShow ? 'none' : 'block';
+  $('main-zone').style.display = (d.noShow || d.status === 'cancelled') ? 'none' : 'block';
   const ns = $('btn-noshow'); ns.className = 'btn-wide' + (d.noShow ? ' active' : '');
-  ns.textContent = d.noShow ? '🚫 Marked as No Show (tap to undo)' : '🚫 Mark as No Show';
+  ns.textContent = d.status === 'cancelled' ? '⚠ Cancelled appointment (use Settings to change)' : (d.noShow ? '🚫 Marked as No Show (tap to undo)' : '🚫 Mark as No Show');
+  ns.disabled = d.status === 'cancelled';
   ['start', 'check', 'end'].forEach(k => { $('v-' + k).value = fmtT(d.times[k]); });
   renderDur(d);
   renderCodeLine(d);
@@ -523,7 +557,7 @@ function renderCodeLine(d) {
   b.className = 'banner' + (ov.fails.length && (hasData(d) && !d.noShow) ? ' fail' : '');
   b.textContent = '📝 ' + curSess + ' · ' + nm + ' ➔ Patient ' + cP + ' · ' + (d.age || '?') + (d.gender || '?');
   const sm = document.createElement('small');
-  sm.textContent = (d.pxId ? 'ID ' + d.pxId + ' · ' : '') + caseCode(cS, cP) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
+  sm.textContent = (d.pxId ? 'ID ' + d.pxId + ' · ' : '') + caseCode(cS, cP) + ' · ' + statusLabel(d) + (b.classList.contains('fail') ? ' · ⚠ Domain ≤4: ' + ov.fails.join(', ') : '');
   b.appendChild(sm);
 }
 function renderScores(d) {
@@ -546,7 +580,7 @@ function renderDone(d) {
 }
 
 function addS4() { roster.showS4 = true; saveRoster(); render(); }
-function toggleNoShow() { P().noShow = !P().noShow; save(); render(); }
+function toggleNoShow() { const d=P(); if(d.status==='cancelled') return; d.noShow=!d.noShow; d.status=d.noShow?'noshow':'scheduled'; save(); render(); }
 function toggleDone() { P().done = !P().done; save(); render(); }
 function setNewCase() {
   const d = P();
@@ -657,10 +691,12 @@ function generateReport() {
       const d = db[s][p], cc = caseCode(s, p);
       if (!hasData(d)) { lines.push('  Patient ' + p + ' (' + cc + '): no data'); continue; }
       entered++;
-      if (d.noShow) { ns++; lines.push('  Patient ' + p + ' (' + cc + '): *** NO SHOW ***'); continue; }
+      if (d.status === 'cancelled') { lines.push('  Patient ' + p + ' (' + cc + '): *** CANCELLED ***'); continue; }
+      if (d.noShow || d.status === 'noshow') { ns++; lines.push('  Patient ' + p + ' (' + cc + '): *** NO SHOW ***'); continue; }
       if (d.done) done++;
       const idTxt = d.pxId ? maskId(d.pxId) : '—';
-      lines.push('  Patient ' + p + ' (Case Code: ' + cc + ' | ID: ' + idTxt + ' | ' + (d.age || '?') + (d.gender || '?') + '):');
+      lines.push('  Patient ' + p + ' (Case Code: ' + cc + ' | ' + statusLabel(d) + ' | ID: ' + idTxt + ' | ' + (d.age || '?') + (d.gender || '?') + '):');
+      if (d.replacementOf) lines.push('    Walk-in replacement of cancelled appointment: ' + d.replacementOf);
       const tm = ['start', 'check', 'end'].map((k, i) => ['Start', 'Dilation', 'Discharge'][i] + ' ' + (fmtT(d.times[k]) || '—')).join(' | ');
       const tot = minsBetween(d.times.start, d.times.end);
       lines.push('    Times: ' + tm + (tot !== null ? ' | Total ' + tot + ' min' : ''));
@@ -813,7 +849,7 @@ function interpretRows(rows, delim) {
 function previewImport() {
   const text = $('imp-text').value;
   const box = $('imp-preview'), ap = $('imp-apply');
-  importRows = []; importOverwrites = 0;
+  importRows = []; importOverwrites = 0; importLocked = 0;
   if (!text.trim()) { box.style.display = 'block'; box.textContent = '請先貼上資料。'; ap.style.display = 'none'; return; }
   const delim = detectDelim(text);
   const res = interpretRows(parseTable(text, delim), delim);
@@ -821,7 +857,7 @@ function previewImport() {
   const lines = [];
   lines.push('匯入日期：' + curDate + '（如需更改，請先在畫面頂部選擇日期）');
   ['AM', 'PM'].forEach(sess => {
-    const rs = importRows.filter(r => r.sess === sess);
+    const rs = importRows.filter(r => r.sess === sess && !r.locked);
     if (!rs.length) return;
     const ros = readRoster(sess), day = readDayFor(curDate, sess);
     lines.push('', '【' + sess + '】');
@@ -835,7 +871,9 @@ function previewImport() {
       if (last && ros.names[s] && ros.names[s] !== last.name) { importOverwrites++; lines.push('  ⚠ 將覆蓋現有姓名：' + ros.names[s]); }
       rr.forEach(r => {
         const d = day[r.s][r.p];
+        r.locked = hasClinicalData(d);
         let note = '';
+        if (r.locked) { importLocked++; note += ' 🔒已有 clinical data，Apply 時跳過'; }
         if (r.id && d.pxId && d.pxId !== r.id) { importOverwrites++; note += ' ⚠覆蓋ID(' + d.pxId + ')'; }
         if (r.hx && d.prevHx && d.prevHx !== 'New case' && d.prevHx !== r.hx) { importOverwrites++; note += ' ⚠覆蓋Hx'; }
         lines.push('  P' + r.p + '  ID ' + (r.id || '—') + ' · ' + (r.age || '?') + (r.gender || '?') + ' · Hx ' + (r.hx ? r.hx.length + ' 字' : '—') + note);
@@ -843,7 +881,7 @@ function previewImport() {
     });
   });
   if (res.msgs.length) { lines.push('', '提示：'); res.msgs.forEach(m => lines.push(m)); }
-  lines.push('', importRows.length ? '可匯入 ' + importRows.length + ' 位病人。' + (importOverwrites ? '其中有 ' + importOverwrites + ' 項會覆蓋現有內容。' : '') : '沒有可匯入的資料。');
+  lines.push('', importRows.length ? '讀取到 ' + importRows.length + ' 位病人；可匯入 ' + (importRows.length - importLocked) + ' 位。' + (importLocked ? '有 ' + importLocked + ' 位因已有 clinical data 而鎖定並會跳過。' : '') + (importOverwrites ? '其中有 ' + importOverwrites + ' 項會覆蓋現有 appointment 內容。' : '') : '沒有可匯入的資料。');
   box.style.display = 'block'; box.textContent = lines.join('\n');
   ap.style.display = importRows.length ? 'block' : 'none';
 }
@@ -852,7 +890,7 @@ function applyImport() {
   if (importOverwrites > 0 && !confirm('有 ' + importOverwrites + ' 項會覆蓋現有姓名／ID／Hx，確定匯入？')) return;
   let n = 0;
   ['AM', 'PM'].forEach(sess => {
-    const rs = importRows.filter(r => r.sess === sess);
+    const rs = importRows.filter(r => r.sess === sess && !r.locked);
     if (!rs.length) return;
     const isCur = sess === curSess;
     const ros = isCur ? roster : readRoster(sess);
@@ -872,13 +910,50 @@ function applyImport() {
     else { try { localStorage.setItem(rosterKey(sess), JSON.stringify(ros)); } catch (e) { toast('⚠ 名單儲存失敗'); } writeDayFor(curDate, sess, day); }
   });
   importRows = []; $('imp-text').value = '';
-  closeImport(); render(); toast('✓ 已匯入 ' + n + ' 位病人');
+  closeImport(); render(); toast('✓ 已匯入 ' + n + ' 位病人' + (importLocked ? '；跳過已鎖定 ' + importLocked + ' 位' : ''));
 }
 
 /* ===== Settings / backup ===== */
 function openSettings() {
   $('set-prompt').value = settings.prompt || ''; $('set-hx').checked = !!settings.inclHx;
-  renderStored(); $('modal').classList.add('show');
+  renderStored(); fillAssignmentControls(); $('modal').classList.add('show');
+}
+function fillAssignmentControls() {
+  const ss = [];
+  for (let i=1;i<=NS;i++) { if (i===4 && !roster.showS4) continue; ss.push('<option value="'+i+'">S'+i+' '+(roster.names[i]||'')+'</option>'); }
+  const pp = ['<option value="1">Patient 1</option>','<option value="2">Patient 2</option>'];
+  $('assign-from-s').innerHTML = ss.join(''); $('assign-to-s').innerHTML = ss.join('');
+  $('assign-from-p').innerHTML = pp.join(''); $('assign-to-p').innerHTML = pp.join('');
+  $('assign-from-s').value = cS; $('assign-from-p').value = cP;
+  $('assign-to-s').value = cS===1 ? 2 : 1; $('assign-to-p').value = cP;
+  previewAssignment();
+}
+function previewAssignment() {
+  const act=$('assign-action').value, fs=Number($('assign-from-s').value), fp=Number($('assign-from-p').value), ts=Number($('assign-to-s').value), tp=Number($('assign-to-p').value);
+  const a=db[fs][fp], b=db[ts][tp];
+  $('assign-to-row').style.display=(act==='cancel'||act==='walkin')?'none':'grid';
+  const lines=['目前畫面：S'+cS+' P'+cP+'（完成後保持不變）','來源：S'+fs+' P'+fp+' · ID '+(maskId(a.pxId)||'—')+' · '+statusLabel(a)+(hasClinicalData(a)?' · 🔒 已開始':' · 尚未開始')];
+  if(act==='move'||act==='swap') lines.push('目標：S'+ts+' P'+tp+' · ID '+(maskId(b.pxId)||'—')+' · '+statusLabel(b)+(hasClinicalData(b)?' · 🔒 已開始':hasAppointmentData(b)?' · 有 appointment':' · 空白'));
+  let ok=!hasClinicalData(a) && hasAppointmentData(a);
+  if(act==='move') ok=ok && !hasAppointmentData(b) && !hasClinicalData(b) && !(fs===ts&&fp===tp);
+  if(act==='swap') ok=ok && !hasClinicalData(b) && hasAppointmentData(b) && !(fs===ts&&fp===tp);
+  if(act==='cancel') ok=ok && a.status!=='cancelled';
+  if(act==='walkin') ok=ok && a.status==='cancelled';
+  lines.push(ok?'✓ 可以執行':'⚠ 目前條件不允許執行');
+  $('assign-preview').textContent=lines.join('\n'); $('assign-apply').disabled=!ok;
+}
+function applyAssignment() {
+  if($('assign-apply').disabled) return;
+  const act=$('assign-action').value, fs=Number($('assign-from-s').value), fp=Number($('assign-from-p').value), ts=Number($('assign-to-s').value), tp=Number($('assign-to-p').value);
+  const a=db[fs][fp], b=db[ts][tp];
+  if(act==='move'){db[ts][tp]=clonePatient(a);db[fs][fp]=newPatient();}
+  else if(act==='swap'){db[fs][fp]=clonePatient(b);db[ts][tp]=clonePatient(a);}
+  else if(act==='cancel'){a.status='cancelled';a.noShow=false;a.cancelledAt=new Date().toISOString();}
+  else if(act==='walkin'){
+    const old=(a.pxId?maskId(a.pxId):'—')+' '+(a.age||'?')+(a.gender||'?');
+    const w=newPatient();w.status='walkin';w.replacementOf=old;db[fs][fp]=w;
+  }
+  save(); closeSettings(); render(); toast('✓ Case 已更新；目前仍在 S'+cS+' P'+cP);
 }
 function closeSettings() { $('modal').classList.remove('show'); }
 function savePrompt() { settings.prompt = $('set-prompt').value; settings.inclHx = $('set-hx').checked; saveSettings(); toast('✓ 已儲存'); }
@@ -917,7 +992,7 @@ function exportBackup(silent) {
   save();
   storedKeys().forEach(k => { try { days[k] = JSON.parse(localStorage.getItem(k)); } catch (e) {} });
   const rosters = {AM:readRoster('AM'), PM:readRoster('PM')};
-  downloadBlob('ClinicalLog_backup_' + curDate + '_' + curSess + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), rosters:rosters, days:days}), 'application/json');
+  downloadBlob('ClinicalLog_V25_backup_' + curDate + '_' + curSess + '.json', JSON.stringify({version:18, exportedAt:new Date().toISOString(), rosters:rosters, days:days}), 'application/json');
   if (!silent) toast('✓ 備份已下載（含完整 ID，請妥善保管）');
 }
 function importBackup(inp) {
