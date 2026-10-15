@@ -275,7 +275,7 @@ const pad = n => String(n).padStart(2, '0');
 const NS = 4, NP = 2, PFX = 'optom_v18_';
 const DOMAINS = ['prelim', 'comm', 'prof', 'fluency', 'accuracy'];
 const DLABEL = {prelim:'Preliminary', comm:'Communication', prof:'Proficiency', fluency:'Fluency', accuracy:'Accuracy'};
-const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 只顯示末段號碼）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的繁體中文回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
+const DEFAULT_PROMPT = '以下為臨床督導記錄（Patient ID 只顯示末段號碼）。請按各學生的評分、錯誤紀錄與意見，為每位學生撰寫簡潔、具建設性的英文(IELTS 7.0) 回饋，並以 Case Code 標示對應個案，不要自行推測病人身份。';
 
 const errDefs = {
   '1. History & Workflow': {ph:'e.g., Inefficient workflow, missed chief complaint, incomplete glaucoma risks...', map:['comm','fluency']},
